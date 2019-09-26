@@ -12,9 +12,9 @@ typedef struct { float lastX, lastY, zoomFactor; bool zoomed; float scale;
 
 typedef struct { float x, y;} Vec2f;
 typedef struct { float x, y, z; } Vec3f;
-typedef struct { Vec3f r0, v0, v; Vec3f r; float rotationX, rotationY; } Frog;
+typedef struct { Vec3f r0, v0, v; Vec3f r; float rotationX, rotationY; bool isAlive; } Frog;
 typedef struct { float radius, width, posX, posY, posZ; } Log;
-typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ; } Scene;
+typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ, riverHeight; } Scene;
 
 Vec2f initVel = { 0.5, 70 };
 Frog frog = {
@@ -23,11 +23,12 @@ Frog frog = {
    //   initVel.x * sinf(M_PI * initVel.y / 180), },
     { 0, 0, 0},
     { 0.0, 0.0 },
-    { 0.0, 0.0, 0.0 },
-    0, 0
+    //frog x, y, z
+    { 0.5, 0.0, 0.0 },
+    0, 0, true
 };
 
-float dx = 0;
+float dx = -90;
 float dy = -45;
 float rotateY = 0;
 float rotateX = 0;
@@ -42,7 +43,7 @@ bool isWireframe = false;
 Log logs[5];
 
 Camera camera { false, 0.3 };
-Scene scene { 0, 0, 1, 0, 2, 2 };
+Scene scene { 0, 0, 2.5, 0, 3, 2, 0.15 };
 
 static GLuint grassTexture;
 static GLuint woodTexture;
@@ -191,19 +192,32 @@ void draw_water(float sizeX, float sizeZ, float x, float y, float z){
     }
 }
 
-bool collideWithLog(float x, float y, float z, bool withFrog) {
+bool collideWithLog(Log log, float x, float y, float z, bool withFrog) {
     float r = 0;
     
     if (withFrog)
-        r = logs[0].radius + 0.03;
+        r = log.radius + 0.03;
     else
-        r = logs[0].radius;
+        r = log.radius;
     
-    return (x - logs[0].posX) * (x - logs[0].posX) + (y - logs[0].posY) * (y - logs[0].posY) <= r * r && z >= logs[0].posZ && z <= logs[0].posZ + logs[0].width;
+    return (x - log.posX) * (x - log.posX) + (y - log.posY) * (y - log.posY) <= r * r && z >= log.posZ && z <= log.posZ + log.width;
 }
 
-void idle() {
+void reset() {
+    jumping = false;
+    frog.v.x = 0;
+    frog.v.y = 0;
+    frog.v.z = 0;
+  //  frog.r.y = 0;
+}
+
+void idle(void) {
     t += 0.1;
+    
+    if (!frog.isAlive) {
+        frog.r.y = calcSineWave(water_sw, frog.r.x, frog.r.z, dx);
+        return;
+    }
     
     frog.r.x += frog.v.x * 0.1;
     frog.r.y += frog.v.y * 0.1;
@@ -211,20 +225,27 @@ void idle() {
     // Velocity
     frog.v.y += -0.25 * 0.1;
     
-    if (frog.r.y <= 0) {
-        jumping = false;
-        frog.v.x = 0;
-        frog.v.y = 0;
-        frog.v.z = 0;
+//    if (isUnderwater(water_sw, frog.r.x, frog.r.y, frog.r.z, dx)){
+//        frog.isAlive = false;
+//    }
+    
+    if (frog.r.x >= -1 && frog.r.x <= 1 && frog.r.z >= -1 && frog.r.z <= 1 && frog.r.y <= 0) {
         frog.r.y = 0;
+        reset();
     }
-    if (collideWithLog(frog.r.x, frog.r.y, frog.r.z, true)) {
-        frog.r.y = logs[0].posY + logs[0].radius;
-       // frog.r.x = logs[0].posX;
-        jumping = false;
-        frog.v.x = 0;
-        frog.v.y = 0;
-        frog.v.z = 0;
+    if (frog.r.x >= scene.riverPosX - scene.riverSizeX * 0.5 &&
+        frog.r.x <= scene.riverPosX + scene.riverSizeX * 0.5 &&
+        frog.r.z >= scene.riverPosZ - scene.riverSizeZ * 0.5 &&
+        frog.r.z <= scene.riverPosZ + scene.riverSizeZ * 0.5
+        ) {
+        for (int i = 0; i < 5; i++) {
+            if (collideWithLog(logs[i], frog.r.x, frog.r.y, frog.r.z, true)) {
+                frog.r.y = logs[i].posY + logs[i].radius;
+                reset();
+               // frog.r.x = logs[0].posX;
+              //  reset();
+            }
+        }
     }
     
     glutPostRedisplay();
@@ -258,10 +279,21 @@ void draw_trajectory(){
         z += v.z * dt;
         v.y += -0.25 * dt;
         
+        
+        //ground
         if ( x >= -1 && x <= 1 && z >= -1 && z <= 1 && y <= 0){
             break;
         }
-        if (collideWithLog(x, y, z, false)) {
+        //river
+        if (x >= scene.riverPosX - scene.riverSizeX * 0.5 &&
+            x <= scene.riverPosX + scene.riverSizeX * 0.5 &&
+            z >= scene.riverPosZ - scene.riverSizeZ * 0.5 &&
+            z <= scene.riverPosZ + scene.riverSizeZ * 0.5 &&
+            y <= -scene.riverHeight) {
+            break;
+        }
+            
+        if (collideWithLog(logs[0], x, y, z, false)) {
             break;
         }
      //   if (x >= scene.riverPosX)
@@ -308,8 +340,10 @@ void draw_Frog(){
 }
 
 void draw_logs(){
-    logs[0].posY = calcSineWave(water_sw, logs[0].posX, logs[0].posZ, t);
-    draw_cylinder(logs[0].radius, logs[0].width, logs[0].posX, logs[0].posY, logs[0].posZ,woodTexture, isWireframe);
+    for (int i = 0; i < 5; i++) {
+        logs[i].posY = calcSineWave(water_sw, logs[i].posX, 0, t) - scene.riverHeight;
+        draw_cylinder(logs[i].radius, logs[i].width, logs[i].posX, logs[i].posY, logs[i].posZ,woodTexture, isWireframe);
+    }
 }
 
 static void display(void)
@@ -327,7 +361,7 @@ static void display(void)
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
     
     draw_plane(0,0,0);
-    draw_water(scene.riverSizeX, scene.riverSizeZ, 2, -0.125, 0);
+    draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
     
     glPushMatrix();
         drawAxes(0.8);
@@ -419,7 +453,13 @@ void init(){
     gluPerspective(75, 1, 0.01, 100);        // Multiply the current matrix with a generated perspective matrix
     glMatrixMode(GL_MODELVIEW);
     
-    logs[0] = { 0.12, 0.8, 0, 0, 0 };
+    //float radius, width, posX, posY, posZ
+    logs[0] = { 0.08, 0.8, 1.3, 0, -0.4 };
+    logs[1] = { 0.075, 0.9, 1.7, 0, 0 };
+    logs[2] = { 0.07, 1.1, 2.2, 0, -0.2 };
+    logs[3] = { 0.1, 1, 2.7, 0, -0.8 };
+    logs[4] = { 0.1, 0.9, 3.1, 0, -0.1 };
+    
   //  glutSwapBuffers();
 }
 

@@ -30,3 +30,7 @@ float calculateSin(float A, float x, float t) {
 float calcSineWave(Sinewave sw, float x, float z, float t) {
     return sw.a * sinf(sw.kx * x + sw.kz * z + sw.w * t);
 }
+
+bool isUnderwater(Sinewave sw, float x, float y, float z, float t) {
+    return y <= calcSineWave(sw, x, 0, t);
+}
