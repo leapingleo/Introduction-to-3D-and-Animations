@@ -8,6 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		8A766AE5233C834F00E139B5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F55233709430063530A /* main.cpp */; };
+		8A766AF5233C98CA00E139B5 /* wood.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF4233C98A400E139B5 /* wood.png */; };
+		8A766AF6233C98CA00E139B5 /* negx.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AEE233C8E3400E139B5 /* negx.png */; };
+		8A766AF7233C98CA00E139B5 /* negy.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF2233C8E3400E139B5 /* negy.png */; };
+		8A766AF8233C98CA00E139B5 /* negz.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF3233C8E3400E139B5 /* negz.png */; };
+		8A766AF9233C98CA00E139B5 /* posx.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AEF233C8E3400E139B5 /* posx.png */; };
+		8A766AFA233C98CA00E139B5 /* posy.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF0233C8E3400E139B5 /* posy.png */; };
+		8A766AFB233C98CA00E139B5 /* posz.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF1233C8E3400E139B5 /* posz.png */; };
 		8A7CE2C02338700800F8BB9C /* helper.h in Sources */ = {isa = PBXBuildFile; fileRef = 8A7CE2BF2338700800F8BB9C /* helper.h */; };
 		8AEC9F8D2337094E0063530A /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AEC9F8C2337094E0063530A /* OpenGL.framework */; };
 		8AEC9F8F233709570063530A /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AEC9F8E233709570063530A /* GLUT.framework */; };
@@ -16,7 +23,6 @@
 		8AECA04423370F9E0063530A /* libSOIL.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 8AECA03623370F790063530A /* libSOIL.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		8AECA04523370F9E0063530A /* libSOIL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AECA03823370F790063530A /* libSOIL.a */; };
 		8AECA0492337110F0063530A /* grass.png in Sources */ = {isa = PBXBuildFile; fileRef = 8AECA048233711090063530A /* grass.png */; };
-		8AF9F3C62338C62100A606B1 /* wood.png in Sources */ = {isa = PBXBuildFile; fileRef = 8AF9F3C52338C61C00A606B1 /* wood.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,6 +49,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8A766AED233C8DDD00E139B5 /* wood.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = wood.png; sourceTree = "<group>"; };
+		8A766AEE233C8E3400E139B5 /* negx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = negx.png; sourceTree = "<group>"; };
+		8A766AEF233C8E3400E139B5 /* posx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = posx.png; sourceTree = "<group>"; };
+		8A766AF0233C8E3400E139B5 /* posy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = posy.png; sourceTree = "<group>"; };
+		8A766AF1233C8E3400E139B5 /* posz.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = posz.png; sourceTree = "<group>"; };
+		8A766AF2233C8E3400E139B5 /* negy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = negy.png; sourceTree = "<group>"; };
+		8A766AF3233C8E3400E139B5 /* negz.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = negz.png; sourceTree = "<group>"; };
+		8A766AF4233C98A400E139B5 /* wood.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = wood.png; path = ../../../wood.png; sourceTree = "<group>"; };
 		8A7CE2BF2338700800F8BB9C /* helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = helper.h; sourceTree = "<group>"; };
 		8AEC9F3F2337091C0063530A /* opengl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = opengl; sourceTree = BUILT_PRODUCTS_DIR; };
 		8AEC9F422337091C0063530A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -113,6 +127,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8A766AEC233C8DD200E139B5 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				8A766AF4233C98A400E139B5 /* wood.png */,
+				8A766AEE233C8E3400E139B5 /* negx.png */,
+				8A766AF2233C8E3400E139B5 /* negy.png */,
+				8A766AF3233C8E3400E139B5 /* negz.png */,
+				8A766AEF233C8E3400E139B5 /* posx.png */,
+				8A766AF0233C8E3400E139B5 /* posy.png */,
+				8A766AF1233C8E3400E139B5 /* posz.png */,
+				8A766AED233C8DDD00E139B5 /* wood.png */,
+				8AECA048233711090063530A /* grass.png */,
+				8AEC9F53233709430063530A /* rgbtest.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
 		8AEC9F362337091C0063530A = {
 			isa = PBXGroup;
 			children = (
@@ -182,9 +213,8 @@
 		8AEC9F52233709430063530A /* 3D_Frogger_Assignment */ = {
 			isa = PBXGroup;
 			children = (
+				8A766AEC233C8DD200E139B5 /* Images */,
 				8AF9F3C52338C61C00A606B1 /* wood.png */,
-				8AECA048233711090063530A /* grass.png */,
-				8AEC9F53233709430063530A /* rgbtest.png */,
 				8A7CE2BF2338700800F8BB9C /* helper.h */,
 				8AEC9F55233709430063530A /* main.cpp */,
 				8AF9F3BF2338BFDF00A606B1 /* drawHelper.h */,
@@ -356,8 +386,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A766AF5233C98CA00E139B5 /* wood.png in Sources */,
+				8A766AF6233C98CA00E139B5 /* negx.png in Sources */,
+				8A766AF7233C98CA00E139B5 /* negy.png in Sources */,
+				8A766AF8233C98CA00E139B5 /* negz.png in Sources */,
+				8A766AF9233C98CA00E139B5 /* posx.png in Sources */,
+				8A766AFA233C98CA00E139B5 /* posy.png in Sources */,
+				8A766AFB233C98CA00E139B5 /* posz.png in Sources */,
 				8A766AE5233C834F00E139B5 /* main.cpp in Sources */,
-				8AF9F3C62338C62100A606B1 /* wood.png in Sources */,
 				8AECA0492337110F0063530A /* grass.png in Sources */,
 				8AEC9FD023370A250063530A /* rgbtest.png in Sources */,
 				8A7CE2C02338700800F8BB9C /* helper.h in Sources */,

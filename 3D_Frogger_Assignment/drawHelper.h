@@ -102,3 +102,103 @@ void draw_cylinder(float radius, float width, float x, float y, float z, GLuint 
     glDisable(GL_TEXTURE_2D);
     glLineWidth(1.0);
 }
+
+void draw_skybox(GLuint negX, GLuint negY, GLuint negZ, GLuint posX, GLuint posY, GLuint posZ){
+    float length = 4;
+
+  //Back side
+  //NEG-Z
+  //glColor3f( 0.5, 0.5, 1.0 );
+  
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, negZ);
+    
+    glBegin(GL_POLYGON);
+    glTexCoord2f(0, 0);
+    glVertex3f(-length, -length, -length);
+    glTexCoord2f(1, 0);
+    glVertex3f(length, -length, -length);
+    glTexCoord2f(1,1);
+    glVertex3f(length, length, -length);
+    glTexCoord2f(0, 1);
+    glVertex3f(-length, length, -length);// P4 is purple
+    glEnd();
+    
+    // White side - Front
+    // POS-Z
+    glBindTexture(GL_TEXTURE_2D, posZ);
+    glBegin(GL_POLYGON);
+    glColor3f(1.0, 1.0, 1.0 );
+    glTexCoord2f(0, 0);
+    glVertex3f(length, -length, length);
+    glTexCoord2f(1, 0);
+    glVertex3f(-length,  -length, length);
+    glTexCoord2f(1, 1);
+    glVertex3f(-length, length, length);
+    glTexCoord2f(0, 1);
+    glVertex3f(length, length, length);
+    glEnd();
+
+    // Purple side - RIGHT
+    // POS-X
+    glBindTexture(GL_TEXTURE_2D, posX);
+    glBegin(GL_POLYGON);
+    glColor3f(  1.0,  1.0,  1.0 );
+    glTexCoord2f(0, 0);
+    glVertex3f( length, -length, -length );
+    glTexCoord2f(1, 0);
+    glVertex3f( length,  -length, length );
+    glTexCoord2f(1, 1);
+    glVertex3f( length,  length,  length );
+    glTexCoord2f(0, 1);
+    glVertex3f( length, length,  -length );
+    glEnd();
+
+    // Green side - LEFT
+    // NEG-X
+    glBindTexture(GL_TEXTURE_2D, negX);
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  1.0,  1.0 );
+    glTexCoord2f(0, 0);
+    glVertex3f( -length, -length,  length );
+    glTexCoord2f(1, 0);
+    glVertex3f( -length,  -length,  -length );
+    glTexCoord2f(1, 1);
+    glVertex3f( -length,  length, -length );
+    glTexCoord2f(0, 1);
+    glVertex3f( -length, length, length );
+    glEnd();
+
+    // Blue side - TOP
+    //POS-Y
+    glBindTexture(GL_TEXTURE_2D, posY);
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  1.0,  1.0 );
+    glTexCoord2f(0, 0);
+    glVertex3f(  length,  length,  length );
+    glTexCoord2f(1, 0);
+    glVertex3f(  -length,  length, length );
+    glTexCoord2f(1, 1);
+    glVertex3f( -length,  length, -length );
+    glTexCoord2f(0, 1);
+    glVertex3f( length,  length,  -length );
+    glEnd();
+
+    // Red side - BOTTOM
+    //NEG-Y
+    glBindTexture(GL_TEXTURE_2D, posY);
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  1.0,  1.0 );
+    glTexCoord2f(0, 0);
+    glVertex3f(  length, -length, length );
+    glTexCoord2f(1, 0);
+    glVertex3f(  -length, -length,  length );
+    glTexCoord2f(1, 1);
+    glVertex3f( -length, -length,  -length );
+    glTexCoord2f(0, 1);
+    glVertex3f( length, -length, -length );
+    glEnd();
+    
+    glDisable(GL_TEXTURE_2D);
+}

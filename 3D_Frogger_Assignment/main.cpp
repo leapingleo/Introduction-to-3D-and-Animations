@@ -28,7 +28,7 @@ Frog frog = {
     0, 0, true
 };
 
-float dx = -90;
+float dx = 0;
 float dy = -45;
 float rotateY = 0;
 float rotateX = 0;
@@ -47,7 +47,8 @@ Camera camera { false, 0.3 };
 Scene scene { 0, 0, 2.5, 0, 3, 2, 0.15 };
 
 static GLuint grassTexture;
-static GLuint woodTexture;
+static GLuint woodTexture, negXTexture, negYTexture,
+              negZTexture, posXTexture, posYTexture, posZTexture;
 
 void drawAxes(float l) {
     glBegin(GL_LINES);
@@ -362,7 +363,7 @@ static void display(void)
     glScalef(scale, scale, scale);
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
-    
+    draw_skybox(negXTexture, negYTexture, negZTexture, posXTexture, posYTexture, posZTexture);
     draw_plane(0,0,0);
     draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
     
@@ -476,6 +477,13 @@ int main(int argc, char **argv)
     init();
     grassTexture = loadTexture("grass.png");
     woodTexture = loadTexture("wood.png");
+    
+    negXTexture = loadTexture("negx.png");
+    negYTexture = loadTexture("negy.png");
+    negZTexture = loadTexture("negz.png");
+    posXTexture = loadTexture("posx.png");
+    posYTexture = loadTexture("posy.png");
+    posZTexture = loadTexture("posz.png");
    // glutReshapeFunc(reshape);
     glutMotionFunc(mouseMotion);
     glutSpecialFunc(SpecialInput);
@@ -487,4 +495,50 @@ int main(int argc, char **argv)
     
     return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
