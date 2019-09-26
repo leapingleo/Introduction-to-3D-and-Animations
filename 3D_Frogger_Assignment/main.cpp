@@ -1,0 +1,447 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <iostream>
+#include <GLUT/GLUT.h>
+#include <OpenGL/glu.h>
+#include "helper.h"
+#include "drawHelper.h"
+
+typedef struct { float lastX, lastY, zoomFactor; bool zoomed; float scale;
+} Camera;
+
+typedef struct { float x, y;} Vec2f;
+typedef struct { float x, y, z; } Vec3f;
+typedef struct { Vec3f r0, v0, v; Vec3f r; float rotationX, rotationY; } Frog;
+typedef struct { float radius, width, posX, posY, posZ; } Log;
+typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ; } Scene;
+
+Vec2f initVel = { 0.5, 70 };
+Frog frog = {
+    { 0.0, 0.0 },
+   // { initVel.x * cosf(M_PI * initVel.y / 180) * cosf(deg2rad(frog.rotationY)),
+   //   initVel.x * sinf(M_PI * initVel.y / 180), },
+    { 0, 0, 0},
+    { 0.0, 0.0 },
+    { 0.0, 0.0, 0.0 },
+    0, 0
+};
+
+float dx = 0;
+float dy = -45;
+float rotateY = 0;
+float rotateX = 0;
+float movingX = 0, movingZ = -2;
+float scale = 1;
+float jumping = false;
+float a = 0;
+float r = 0.03;
+float t = 0;
+Sinewave water_sw = { 1.0/16.0, M_PI * 4, 2 * M_PI, 0.25 * M_PI };
+bool isWireframe = false;
+Log logs[5];
+
+Camera camera { false, 0.3 };
+Scene scene { 0, 0, 1, 0, 2, 2 };
+
+static GLuint grassTexture;
+static GLuint woodTexture;
+
+void drawAxes(float l) {
+    glBegin(GL_LINES);
+    glColor3f(1.0, 0.0, 0.0);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(l, 0.0, 0.0);
+    glEnd();
+    
+    glBegin(GL_LINES);
+    glColor3f(0.0, 1.0, 0.0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, l, 0);
+    glEnd();
+    
+    glBegin(GL_LINES);
+    glColor3f(0.0, 0.0, 1.0);
+    glVertex3f(0.0, 0.0, 0.0);
+    glVertex3f(0.0, 0.0, l);
+    glEnd();
+}
+
+void mouseMotion(int x, int y) {
+    //make sure it doesnt rotate wiredly by large amount when last mouse pos
+    //are too far from current mouse pos
+    
+    if (x - camera.lastX < 5 && y - camera.lastY < 5) {
+        dx += x - camera.lastX;
+        dy += y - camera.lastY;
+    }
+    camera.lastX = x;
+    camera.lastY = y;
+    std::cout << camera.lastX << std::endl;
+}
+
+void draw_rectangle(float x, float y, float z, float size){
+    glColor3f(0, 1, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBegin(GL_POLYGON);
+    glVertex3f(x, y, z);
+    glVertex3f(x, y, z + size);
+    glVertex3f(x + size, y, z + size);
+    glVertex3f(x, y, z);
+    glVertex3f(x + size, y, z);
+    glVertex3f(x + size, y, z + size);
+    glEnd();
+    glColor3f(1, 1, 1);
+    //    drawVector(x, y, z, 0, 0.5, 0, 0.05, false, 1.0, 1.0, 0.0);
+    //    drawVector(x, y, z + 0.1, 0, 0.5, 0, 0.05, false, 1.0, 1.0, 0.0);
+    //    drawVector(x + 0.1, y, z, 0, 0.5, 0, 0.05, false, 1.0, 1.0, 0.0);
+    //    drawVector(x + 0.1, y, z + 0.1, 0, 0.5, 0, 0.05, false, 1.0, 1.0, 0.0);
+}
+
+void draw_plane(float x, float y, float z) {
+    if (isWireframe) {
+        float size = 2.0 / 10.0;
+        for (int i = 0; i < 10; i++) {
+           for (int j = 0; j < 10; j++) {
+               float x = -1 + i * size;
+               float z = -1 + j * size;
+               draw_rectangle(x, y, z, size);
+           }
+        }
+    } else {
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_TEXTURE_2D);
+
+        glBindTexture(GL_TEXTURE_2D, grassTexture);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glColor3f(1, 1, 1);
+
+        glBegin(GL_QUADS);
+            glVertex3f(-1, 0,-1); glTexCoord2f(0, 0);
+            glVertex3f(1, 0, -1); glTexCoord2f(1, 0);
+            glVertex3f(1, 0, 1); glTexCoord2f(1, 1);
+            glVertex3f(-1, 0, 1); glTexCoord2f(0, 1);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+    }
+}
+
+void draw_sphere() {
+    float x, y, z;
+    float theta, phi;
+    glColor3f(0, 1, 0);
+    glPointSize(2.0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
+    
+    for (int i = 0; i < 20; i++){
+        phi = i / (float)20 * M_PI;
+        glBegin(GL_LINE_LOOP);
+        for (int j = 0; j < 100; j++) {
+            theta = j / (float)100 * 2 * M_PI;
+            x = r * sinf(phi) * sinf(theta);
+            y = r * cosf(phi);
+            z = r * sinf(phi) * cosf(theta);
+            glVertex3f(x, y, z);
+        }
+        glEnd();
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        phi = M_PI / 2;
+        glRotatef(360 / 8, 0, 1, 0);
+        glPushMatrix();
+        glBegin(GL_LINE_LOOP);
+        for (int j = 0; j < 100; j++) {
+            theta = j / (float)100 * 2 * M_PI;
+            y = r * sinf(phi) * sinf(theta);
+            x = r * cosf(phi);
+            z = r * sinf(phi) * cosf(theta);
+            glVertex3f(x, y, z);
+        }
+        glEnd();
+        glPopMatrix();
+    }
+}
+
+void draw_water(float sizeX, float sizeZ, float x, float y, float z){
+    float n = 50;
+    float xStep = sizeX / n;
+    float zStep = sizeZ / n;
+    
+    glColor3f(0, 1, 1);
+    if (isWireframe)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    else
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    
+    for (int j = 0; j < n; j++) {
+        glBegin(GL_TRIANGLE_STRIP);
+        float z1 = sizeZ * -0.5 + j * zStep + z;
+        
+        for (int i = 0; i <= n; i++) {
+            float x1 = sizeX * -0.5 + i * xStep + x;
+          //y = fourierSinewave(sw, x, 0, 200, t);
+            float y1 = calcSineWave(water_sw, x1, 0, t) + y;
+          //  y = calcSineWave(sw, x, z, t) + calcSineWave(sw1, x, z, 0);
+            glVertex3f(x1, y1, z1);
+            glVertex3f(x1, y1, z1 + zStep);
+        }
+        glEnd();
+    }
+}
+
+bool collideWithLog(float x, float y, float z, bool withFrog) {
+    float r = 0;
+    
+    if (withFrog)
+        r = logs[0].radius + 0.03;
+    else
+        r = logs[0].radius;
+    
+    return (x - logs[0].posX) * (x - logs[0].posX) + (y - logs[0].posY) * (y - logs[0].posY) <= r * r && z >= logs[0].posZ && z <= logs[0].posZ + logs[0].width;
+}
+
+void idle() {
+    t += 0.1;
+    
+    frog.r.x += frog.v.x * 0.1;
+    frog.r.y += frog.v.y * 0.1;
+    frog.r.z += frog.v.z * 0.1;
+    // Velocity
+    frog.v.y += -0.25 * 0.1;
+    
+    if (frog.r.y <= 0) {
+        jumping = false;
+        frog.v.x = 0;
+        frog.v.y = 0;
+        frog.v.z = 0;
+        frog.r.y = 0;
+    }
+    if (collideWithLog(frog.r.x, frog.r.y, frog.r.z, true)) {
+        frog.r.y = logs[0].posY + logs[0].radius;
+       // frog.r.x = logs[0].posX;
+        jumping = false;
+        frog.v.x = 0;
+        frog.v.y = 0;
+        frog.v.z = 0;
+    }
+    
+    glutPostRedisplay();
+}
+
+
+
+void draw_trajectory(){
+    float x = frog.r.x, y = frog.r.y, z = frog.r.z;
+    float dt = 0.01;
+    int n = 1000;
+    Vec3f v;
+    
+    if (!jumping) {
+        v.x = initVel.x * cosf(M_PI * initVel.y / 180) * cosf(M_PI * frog.rotationY / 180);
+        v.y = initVel.x * sinf(M_PI * initVel.y / 180);
+        v.z = initVel.x * cosf(M_PI * initVel.y / 180) * sinf(M_PI * frog.rotationY / 180);
+    } else {
+        v = frog.v;
+    }
+    
+    glLineWidth(3.0);
+    glBegin(GL_LINE_STRIP);
+    glColor3f(1, 1, 1);
+    int count = 0;
+    
+    while (count <= n ) {
+        
+        x += v.x * dt;
+        y += v.y * dt;
+        z += v.z * dt;
+        v.y += -0.25 * dt;
+        
+        if ( x >= -1 && x <= 1 && z >= -1 && z <= 1 && y <= 0){
+            break;
+        }
+        if (collideWithLog(x, y, z, false)) {
+            break;
+        }
+     //   if (x >= scene.riverPosX)
+
+        //  if (isCollideWithLogs(x, y))
+        //   break;
+        glVertex3f(x, y, z);
+        count++;
+    }
+    glEnd();
+    glLineWidth(1.0);
+    
+}
+
+bool horizontalRotate = false;
+void draw_Frog(){
+//    if (horizontalRotate) {
+//        glTranslatef(movingX, 0, 0);
+//        glRotatef(frog.rotationY, 0, 1, 0);
+//       // glRotatef(frog.rotationX, 1, 0, 0);
+//      //  glTranslatef(-movingX, 0, 0);
+//    }
+//    else {
+//        glRotatef(frog.rotationY, 0, 1, 0);
+//        glTranslatef(movingX, 0, 0);
+//    }
+//    glRotatef(frog.rotationX, 1, 0, 0);
+//    if (!jumping){
+//        glTranslatef(frog.r.x, frog.r.y, 0);
+//        glRotatef(frog.rotationY, 0, 1, 0);
+//        glTranslatef(-frog.r.x, -frog.r.y, 0);
+//    } else {
+//        glRotatef(frog.rotationY, 0, 1, 0);
+//    }
+    draw_trajectory();
+    glTranslatef(frog.r.x, frog.r.y, frog.r.z);
+    glRotatef(-frog.rotationY, 0, 1, 0);
+    glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
+    
+    glTranslatef(frog.r.x, frog.r.y, frog.r.z);
+    draw_sphere();
+   // draw_cube();
+    drawAxes(0.3);
+}
+
+void draw_logs(){
+    logs[0].posY = calcSineWave(water_sw, logs[0].posX, logs[0].posZ, t);
+    draw_cylinder(logs[0].radius, logs[0].width, logs[0].posX, logs[0].posY, logs[0].posZ,woodTexture, isWireframe);
+}
+
+static void display(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    glLoadIdentity();
+    //make the scene visiable by moving -1 unit in z-axis
+    glTranslatef(0, 0, -1);
+    //make the pivot at orgin when rotating the camera
+    glRotatef(-dy, 1, 0, 0);
+    glRotatef(-dx, 0, 1, 0);
+    glScalef(scale, scale, scale);
+    //shift the whole scene by negative units as the frog moves
+    glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
+    
+    draw_plane(0,0,0);
+    draw_water(scene.riverSizeX, scene.riverSizeZ, 2, -0.125, 0);
+    
+    glPushMatrix();
+        drawAxes(0.8);
+        draw_Frog();
+    glPopMatrix();
+    
+  //  glRotatef(90, 0, 1, 0);
+   // glTranslatef(2, -1.0/8.0, 0);
+    draw_logs();
+  //  glScalef(2, 1, 2);
+    
+  //  glRotatef(90, 1, 0, 0);
+  //  drawGrass();
+    
+    int err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+        printf("display: %s\n", gluErrorString(err));
+    glutSwapBuffers();
+}
+
+void keyboard(unsigned char key, int x, int y) {
+    switch (key) {
+        case 27:
+        case 'a':
+            frog.rotationY -= 2;
+            std::cout << "degree: " << frog.rotationY << std::endl;
+            break;
+        case 'd':
+            frog.rotationY += 2;
+            break;
+        case 'w':
+            initVel.y += 1;
+            break;
+        case 's':
+            initVel.y -= 1;
+            std::cout << "init y : " << initVel.y << std::endl;
+            std::cout << "frog.v0.y: " << frog.v0.y << std::endl;
+            break;
+        case 'q':
+            exit(EXIT_SUCCESS);
+            break;
+        case 'f':
+            if (!isWireframe)
+                isWireframe = true;
+            else
+                isWireframe = false;
+            //camera.scale += 0.01;
+            break;
+        case ' ':
+            
+            if (!jumping) {
+                frog.v0.x = initVel.x * cosf(M_PI * initVel.y / 180) * cosf(M_PI * frog.rotationY / 180);
+                frog.v0.y = initVel.x * sinf(M_PI * initVel.y / 180);
+                frog.v0.z = initVel.x * cosf(M_PI * initVel.y / 180) * sinf(M_PI * frog.rotationY / 180);
+                frog.v.x = frog.v0.x;
+                frog.v.y = frog.v0.y;
+                frog.v.z = frog.v0.z;
+            }
+            jumping = true;
+            break;
+        default:
+            break;
+    }
+    glutPostRedisplay();
+}
+
+void SpecialInput(int key, int x, int y)
+{
+    switch(key)
+    {
+        case GLUT_KEY_UP:
+            scale += 0.1;
+            break;
+        case GLUT_KEY_DOWN:
+            scale -= 0.1;
+            break;
+        case GLUT_KEY_LEFT:
+            movingX += 0.1;
+            break;
+        case GLUT_KEY_RIGHT:
+            movingX -= 0.1;
+            break;
+    }
+}
+
+void init(){
+    glMatrixMode(GL_PROJECTION);    // Set the matrix we want to manipulate
+    glLoadIdentity();            // Overwrite the contents with the identity
+    gluPerspective(75, 1, 0.01, 100);        // Multiply the current matrix with a generated perspective matrix
+    glMatrixMode(GL_MODELVIEW);
+    
+    logs[0] = { 0.12, 0.8, 0, 0, 0 };
+  //  glutSwapBuffers();
+}
+
+int main(int argc, char **argv)
+{
+    glutInit(&argc, argv);
+    glutInitDisplayMode((GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH));
+    glutInitWindowSize(600, 600);
+    glutCreateWindow("Frogger");
+    
+    init();
+    grassTexture = loadTexture("grass.png");
+    woodTexture = loadTexture("wood.png");
+   // glutReshapeFunc(reshape);
+    glutMotionFunc(mouseMotion);
+    glutSpecialFunc(SpecialInput);
+    //glutMouseFunc(mouseClicked);
+    glutDisplayFunc(display);
+    glutKeyboardFunc(keyboard);
+    glutIdleFunc(idle);
+    glutMainLoop();
+    
+    return EXIT_SUCCESS;
+}
+
