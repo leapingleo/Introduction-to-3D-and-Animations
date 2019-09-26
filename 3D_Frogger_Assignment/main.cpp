@@ -39,6 +39,7 @@ float a = 0;
 float r = 0.03;
 float t = 0;
 Sinewave water_sw = { 1.0/16.0, M_PI * 4, 2 * M_PI, 0.25 * M_PI };
+Sinewave sw1 = {0.25, M_PI, 2 * M_PI,  M_PI };
 bool isWireframe = false;
 Log logs[5];
 
@@ -169,8 +170,9 @@ void draw_water(float sizeX, float sizeZ, float x, float y, float z){
     float n = 50;
     float xStep = sizeX / n;
     float zStep = sizeZ / n;
-    
-    glColor3f(0, 1, 1);
+   
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0, 1, 1, 0.8);
     if (isWireframe)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     else
@@ -349,8 +351,9 @@ void draw_logs(){
 static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+    glEnable(GL_BLEND);
     glLoadIdentity();
+    
     //make the scene visiable by moving -1 unit in z-axis
     glTranslatef(0, 0, -1);
     //make the pivot at orgin when rotating the camera

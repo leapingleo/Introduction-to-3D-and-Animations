@@ -261,7 +261,7 @@ void display() {
     glScalef(scale, scale, scale);
     glRotatef(-dy, 1, 0, 0);
     glRotatef(-dx, 0, 1, 0);
-    plane();
+    draw_water();
     glPushMatrix();
         drawAxes(0.8);
       //  draw_plane(0, 0, 0);

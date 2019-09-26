@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A766AE5233C834F00E139B5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F55233709430063530A /* main.cpp */; };
 		8A7CE2C02338700800F8BB9C /* helper.h in Sources */ = {isa = PBXBuildFile; fileRef = 8A7CE2BF2338700800F8BB9C /* helper.h */; };
 		8AEC9F8D2337094E0063530A /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AEC9F8C2337094E0063530A /* OpenGL.framework */; };
 		8AEC9F8F233709570063530A /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AEC9F8E233709570063530A /* GLUT.framework */; };
 		8AEC9FD023370A250063530A /* rgbtest.png in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F53233709430063530A /* rgbtest.png */; };
-		8AEC9FD123370A250063530A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F55233709430063530A /* main.cpp */; };
 		8AECA04323370F9E0063530A /* libSOIL.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AECA03623370F790063530A /* libSOIL.dylib */; };
 		8AECA04423370F9E0063530A /* libSOIL.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 8AECA03623370F790063530A /* libSOIL.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		8AECA04523370F9E0063530A /* libSOIL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AECA03823370F790063530A /* libSOIL.a */; };
@@ -356,10 +356,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A766AE5233C834F00E139B5 /* main.cpp in Sources */,
 				8AF9F3C62338C62100A606B1 /* wood.png in Sources */,
 				8AECA0492337110F0063530A /* grass.png in Sources */,
 				8AEC9FD023370A250063530A /* rgbtest.png in Sources */,
-				8AEC9FD123370A250063530A /* main.cpp in Sources */,
 				8A7CE2C02338700800F8BB9C /* helper.h in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
