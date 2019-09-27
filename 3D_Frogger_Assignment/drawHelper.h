@@ -113,7 +113,6 @@ void draw_skybox(GLuint negX, GLuint negY, GLuint negZ, GLuint posX, GLuint posY
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, negZ);
-    
     glBegin(GL_POLYGON);
     glTexCoord2f(0, 0);
     glVertex3f(-length, -length, -length);
@@ -172,18 +171,18 @@ void draw_skybox(GLuint negX, GLuint negY, GLuint negZ, GLuint posX, GLuint posY
 
     // Blue side - TOP
     //POS-Y
-    glBindTexture(GL_TEXTURE_2D, posY);
-    glBegin(GL_POLYGON);
-    glColor3f(   1.0,  1.0,  1.0 );
-    glTexCoord2f(0, 0);
-    glVertex3f(  length,  length,  length );
-    glTexCoord2f(1, 0);
-    glVertex3f(  -length,  length, length );
-    glTexCoord2f(1, 1);
-    glVertex3f( -length,  length, -length );
-    glTexCoord2f(0, 1);
-    glVertex3f( length,  length,  -length );
-    glEnd();
+//    glBindTexture(GL_TEXTURE_2D, posY);
+//    glBegin(GL_POLYGON);
+//    glColor3f(   1.0,  1.0,  1.0 );
+//    glTexCoord2f(0, 0);
+//    glVertex3f(  length,  length,  length );
+//    glTexCoord2f(1, 0);
+//    glVertex3f(  -length,  length, length );
+//    glTexCoord2f(1, 1);
+//    glVertex3f( -length,  length, -length );
+//    glTexCoord2f(0, 1);
+//    glVertex3f( length,  length,  -length );
+//    glEnd();
 
     // Red side - BOTTOM
     //NEG-Y

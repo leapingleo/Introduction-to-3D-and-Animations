@@ -44,7 +44,7 @@ bool isWireframe = false;
 Log logs[5];
 
 Camera camera { false, 0.3 };
-Scene scene { 0, 0, 2.5, 0, 3, 2, 0.15 };
+Scene scene { 0, 0, -1.5, 0, 3, 6, 0.15 };
 
 static GLuint grassTexture;
 static GLuint woodTexture, negXTexture, negYTexture,
@@ -101,17 +101,19 @@ void draw_rectangle(float x, float y, float z, float size){
     //    drawVector(x + 0.1, y, z + 0.1, 0, 0.5, 0, 0.05, false, 1.0, 1.0, 0.0);
 }
 
-void draw_plane(float x, float y, float z) {
+void draw_plane(float x, float y, float z, float planeSize) {
     if (isWireframe) {
-        float size = 2.0 / 10.0;
-        for (int i = 0; i < 10; i++) {
-           for (int j = 0; j < 10; j++) {
-               float x = -1 + i * size;
-               float z = -1 + j * size;
-               draw_rectangle(x, y, z, size);
+        float n = planeSize * 5;
+        float stepSize = planeSize / n;
+        for (int i = 0; i < n; i++) {
+           for (int j = 0; j < n; j++) {
+               float x1 = -planeSize * 0.5 + i * stepSize + x;
+               float z1 = -planeSize * 0.5 + j * stepSize + z;
+               draw_rectangle(x1, y, z1, stepSize);
            }
         }
     } else {
+        float offset = planeSize * 0.5;
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_2D);
 
@@ -120,10 +122,10 @@ void draw_plane(float x, float y, float z) {
         glColor3f(1, 1, 1);
 
         glBegin(GL_QUADS);
-            glVertex3f(-1, 0,-1); glTexCoord2f(0, 0);
-            glVertex3f(1, 0, -1); glTexCoord2f(1, 0);
-            glVertex3f(1, 0, 1); glTexCoord2f(1, 1);
-            glVertex3f(-1, 0, 1); glTexCoord2f(0, 1);
+            glVertex3f(x-offset, 0,z-offset); glTexCoord2f(0, 0);
+            glVertex3f(x+offset, 0, z-offset); glTexCoord2f(1, 0);
+            glVertex3f(x+offset, 0, z+offset); glTexCoord2f(1, 1);
+            glVertex3f(x-offset, 0, z+offset); glTexCoord2f(0, 1);
         glEnd();
         glDisable(GL_TEXTURE_2D);
     }
@@ -363,8 +365,37 @@ static void display(void)
     glScalef(scale, scale, scale);
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
-    draw_skybox(negXTexture, negYTexture, negZTexture, posXTexture, posYTexture, posZTexture);
-    draw_plane(0,0,0);
+   
+    draw_plane(1, 0, -3, 2);
+    draw_plane(1, 0, -1, 2);
+    draw_plane(1, 0, 1, 2);
+    draw_plane(1, 0, 3,2 );
+    
+    draw_plane(3, 0, -3,2);
+    draw_plane(3, 0, -1,2);
+    draw_plane(3, 0, 1,2);
+    draw_plane(3, 0, 3,2);
+    
+    //river left
+   draw_plane(-0.5, 0, 3.5, 1);
+   draw_plane(-1.5, 0, 3.5, 1);
+   draw_plane(-2.5, 0, 3.5, 1);
+    
+    //river right
+    draw_plane(-0.5, 0, -3.5, 1);
+    draw_plane(-1.5, 0, -3.5, 1);
+    draw_plane(-2.5, 0, -3.5, 1);
+    
+    draw_plane(-3.5, 0, -3.5, 1);
+    draw_plane(-3.5, 0, -2.5, 1);
+    draw_plane(-3.5, 0, -1.5, 1);
+    draw_plane(-3.5, 0, -0.5, 1);
+    draw_plane(-3.5, 0, 0.5, 1);
+    draw_plane(-3.5, 0, 1.5, 1);
+    draw_plane(-3.5, 0, 2.5, 1);
+    draw_plane(-3.5, 0, 3.5, 1);
+    
+    
     draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
     
     glPushMatrix();
@@ -376,7 +407,8 @@ static void display(void)
    // glTranslatef(2, -1.0/8.0, 0);
     draw_logs();
   //  glScalef(2, 1, 2);
-    
+    glTranslatef(0, 0.5, 0);
+    draw_skybox(negXTexture, negYTexture, negZTexture, posXTexture, posYTexture, posZTexture);
   //  glRotatef(90, 1, 0, 0);
   //  drawGrass();
     
@@ -458,11 +490,11 @@ void init(){
     glMatrixMode(GL_MODELVIEW);
     
     //float radius, width, posX, posY, posZ
-    logs[0] = { 0.08, 0.8, 1.3, 0, -0.4 };
-    logs[1] = { 0.075, 0.9, 1.7, 0, 0 };
-    logs[2] = { 0.07, 1.1, 2.2, 0, -0.2 };
-    logs[3] = { 0.1, 1, 2.7, 0, -0.8 };
-    logs[4] = { 0.1, 0.9, 3.1, 0, -0.1 };
+    logs[0] = { 0.08, 0.8, -0.3, 0, -0.4 };
+    logs[1] = { 0.075, 0.9, -0.7, 0, 0 };
+    logs[2] = { 0.07, 1.1, -1.2, 0, -0.2 };
+    logs[3] = { 0.1, 1, -1.7, 0, -0.8 };
+    logs[4] = { 0.1, 0.9, -2.5, 0, -0.1 };
     
   //  glutSwapBuffers();
 }
