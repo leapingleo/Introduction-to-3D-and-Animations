@@ -48,9 +48,11 @@ Scene scene { 0, 0, -1.5, 0, 3, 6, 0.15 };
 
 static GLuint grassTexture;
 static GLuint woodTexture, negXTexture, negYTexture,
-              negZTexture, posXTexture, posYTexture, posZTexture;
+              negZTexture, posXTexture, posYTexture, posZTexture,
+              sandTexture;
 
 void drawAxes(float l) {
+    glLineWidth(4.0);
     glBegin(GL_LINES);
     glColor3f(1.0, 0.0, 0.0);
     glVertex3f(0.0, 0.0, 0.0);
@@ -68,6 +70,7 @@ void drawAxes(float l) {
     glVertex3f(0.0, 0.0, 0.0);
     glVertex3f(0.0, 0.0, l);
     glEnd();
+    glLineWidth(1.0);
 }
 
 void mouseMotion(int x, int y) {
@@ -102,30 +105,117 @@ void draw_rectangle(float x, float y, float z, float size){
 }
 
 void draw_plane(float x, float y, float z, float planeSize) {
+    float pondMinX = scene.riverPosX - scene.riverSizeX * 0.5;
+    float pondMaxX = scene.riverPosX + scene.riverSizeX * 0.5;
+    float pondMinZ = scene.riverPosZ - scene.riverSizeZ * 0.5;
+    float pondMaxZ = scene.riverPosZ + scene.riverSizeZ * 0.5;
+    
     if (isWireframe) {
         float n = planeSize * 5;
         float stepSize = planeSize / n;
         for (int i = 0; i < n; i++) {
            for (int j = 0; j < n; j++) {
+               //so that the pivot is always at the centre
                float x1 = -planeSize * 0.5 + i * stepSize + x;
                float z1 = -planeSize * 0.5 + j * stepSize + z;
-               draw_rectangle(x1, y, z1, stepSize);
+               //skip drawing ponds
+               if (x1 > pondMinX && x1 < pondMaxX &&
+                   z1 > pondMinZ && z1 < pondMaxZ)
+                   //the magic number 0.2 = riverbed height lol
+                   draw_rectangle(x1, -scene.riverHeight - 0.2, z1, stepSize);
+               else
+                   draw_rectangle(x1, 0, z1, stepSize);
            }
         }
     } else {
         float offset = planeSize * 0.5;
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_2D);
-
         glBindTexture(GL_TEXTURE_2D, grassTexture);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor3f(1, 1, 1);
 
+//        glBegin(GL_QUADS);
+//
+//            glVertex3f(x-offset, 0,z-offset); glTexCoord2f(0, 0);
+//
+//            glVertex3f(x+offset, 0, z-offset); glTexCoord2f(1, 0);
+//            glVertex3f(x+offset, 0, z+offset); glTexCoord2f(1, 1);
+//
+//            glVertex3f(x-offset, 0, z+offset); glTexCoord2f(0, 1);
+//        glEnd();
+       // glDisable(GL_TEXTURE_2D);
+        
+        float x1 = -4;
+        float z1 = -4;
+        
+        for (int i = 0; i < 8; i++) {
+            x1 = -4;
+            for (int j = 0; j < 8; j++) {
+                if (x1 < -3 || x1 >= 0 || z1 < -3 || z1 >= 3) {
+                    glBegin(GL_QUADS);
+                    glVertex3f(x1, 0, z1); glTexCoord2f(0, 0);
+                    glVertex3f(x1, 0, z1 + 1); glTexCoord2f(0, 1);
+                    glVertex3f(x1 + 1, 0, z1 + 1); glTexCoord2f(1, 1);
+                    glVertex3f(x1 + 1, 0, z1); glTexCoord2f(1, 0);
+                    glEnd();
+                }
+                x1 += 1;
+            }
+            z1 += 1;
+        }
+//        glBegin(GL_QUADS);
+//
+//            glVertex3f(0, 0, 0); glTexCoord2f(0, 0);
+//
+//            glVertex3f(0, 0, 0.2); glTexCoord2f(0, 0.3);
+//            glVertex3f(0.2, 0, 0.2); glTexCoord2f(0.3, 0.3);
+//
+//            glVertex3f(0.2, 0, 0); glTexCoord2f(0.3, 0);
+//        glEnd();
+        
+        //river bed front
         glBegin(GL_QUADS);
-            glVertex3f(x-offset, 0,z-offset); glTexCoord2f(0, 0);
-            glVertex3f(x+offset, 0, z-offset); glTexCoord2f(1, 0);
-            glVertex3f(x+offset, 0, z+offset); glTexCoord2f(1, 1);
-            glVertex3f(x-offset, 0, z+offset); glTexCoord2f(0, 1);
+            glVertex3f(pondMinX, 0, pondMaxZ); glTexCoord2f(0, 0);
+            glVertex3f(pondMinX, 0, pondMinZ); glTexCoord2f(1, 0);
+            glVertex3f(pondMinX, -scene.riverHeight - 0.2, pondMinZ); glTexCoord2f(1, 1);
+            glVertex3f(pondMinX, -scene.riverHeight - 0.2, pondMaxZ); glTexCoord2f(0, 1);
+        glEnd();
+        
+        //river bed back
+        glBegin(GL_QUADS);
+            glVertex3f(pondMaxX, 0, pondMaxZ); glTexCoord2f(0, 0);
+            glVertex3f(pondMaxX, 0, pondMinZ); glTexCoord2f(1, 0);
+            glVertex3f(pondMaxX, -scene.riverHeight - 0.2, pondMinZ); glTexCoord2f(1, 1);
+            glVertex3f(pondMaxX, -scene.riverHeight - 0.2, pondMaxZ); glTexCoord2f(0, 1);
+        glEnd();
+        
+        //river bed right
+        glBegin(GL_QUADS);
+            glVertex3f(pondMinX, 0, pondMinZ); glTexCoord2f(0, 0);
+            glVertex3f(pondMaxX, 0, pondMinZ); glTexCoord2f(1, 0);
+            glVertex3f(pondMaxX, -scene.riverHeight - 0.2, pondMinZ); glTexCoord2f(1, 1);
+            glVertex3f(pondMinX, -scene.riverHeight - 0.2, pondMinZ); glTexCoord2f(0, 1);
+        glEnd();
+        
+        //river bed left
+        glBegin(GL_QUADS);
+            glVertex3f(pondMinX, 0, pondMaxZ); glTexCoord2f(0, 0);
+            glVertex3f(pondMaxX, 0, pondMaxZ); glTexCoord2f(1, 0);
+            glVertex3f(pondMaxX, -scene.riverHeight - 0.2, pondMaxZ); glTexCoord2f(1, 1);
+            glVertex3f(pondMinX, -scene.riverHeight - 0.2, pondMaxZ); glTexCoord2f(0, 1);
+        glEnd();
+        
+        
+        glBindTexture(GL_TEXTURE_2D, sandTexture);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glColor3f(1, 1, 1);
+
+        glBegin(GL_QUADS);
+        glVertex3f(pondMinX, -scene.riverHeight - 0.2, pondMinZ); glTexCoord2f(0, 0);
+        glVertex3f(pondMinX, -scene.riverHeight - 0.2, pondMaxZ); glTexCoord2f(1, 0);
+        glVertex3f(pondMaxX, -scene.riverHeight - 0.2, pondMaxZ); glTexCoord2f(1, 1);
+        glVertex3f(pondMaxX, -scene.riverHeight - 0.2, pondMinZ); glTexCoord2f(0, 1);
         glEnd();
         glDisable(GL_TEXTURE_2D);
     }
@@ -365,35 +455,37 @@ static void display(void)
     glScalef(scale, scale, scale);
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
-   
-    draw_plane(1, 0, -3, 2);
-    draw_plane(1, 0, -1, 2);
-    draw_plane(1, 0, 1, 2);
-    draw_plane(1, 0, 3,2 );
     
-    draw_plane(3, 0, -3,2);
-    draw_plane(3, 0, -1,2);
-    draw_plane(3, 0, 1,2);
-    draw_plane(3, 0, 3,2);
     
-    //river left
-   draw_plane(-0.5, 0, 3.5, 1);
-   draw_plane(-1.5, 0, 3.5, 1);
-   draw_plane(-2.5, 0, 3.5, 1);
-    
-    //river right
-    draw_plane(-0.5, 0, -3.5, 1);
-    draw_plane(-1.5, 0, -3.5, 1);
-    draw_plane(-2.5, 0, -3.5, 1);
-    
-    draw_plane(-3.5, 0, -3.5, 1);
-    draw_plane(-3.5, 0, -2.5, 1);
-    draw_plane(-3.5, 0, -1.5, 1);
-    draw_plane(-3.5, 0, -0.5, 1);
-    draw_plane(-3.5, 0, 0.5, 1);
-    draw_plane(-3.5, 0, 1.5, 1);
-    draw_plane(-3.5, 0, 2.5, 1);
-    draw_plane(-3.5, 0, 3.5, 1);
+    draw_plane(0, 0, 0, 8);
+//    draw_plane(1, 0, -3, 2);
+//    draw_plane(1, 0, -1, 2);
+//    draw_plane(1, 0, 1, 2);
+//    draw_plane(1, 0, 3,2 );
+//
+//    draw_plane(3, 0, -3,2);
+//    draw_plane(3, 0, -1,2);
+//    draw_plane(3, 0, 1,2);
+//    draw_plane(3, 0, 3,2);
+//
+//    //river left
+//   draw_plane(-0.5, 0, 3.5, 1);
+//   draw_plane(-1.5, 0, 3.5, 1);
+//   draw_plane(-2.5, 0, 3.5, 1);
+//
+//    //river right
+//    draw_plane(-0.5, 0, -3.5, 1);
+//    draw_plane(-1.5, 0, -3.5, 1);
+//    draw_plane(-2.5, 0, -3.5, 1);
+//
+//    draw_plane(-3.5, 0, -3.5, 1);
+//    draw_plane(-3.5, 0, -2.5, 1);
+//    draw_plane(-3.5, 0, -1.5, 1);
+//    draw_plane(-3.5, 0, -0.5, 1);
+//    draw_plane(-3.5, 0, 0.5, 1);
+//    draw_plane(-3.5, 0, 1.5, 1);
+//    draw_plane(-3.5, 0, 2.5, 1);
+//    draw_plane(-3.5, 0, 3.5, 1);
     
     
     draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
@@ -516,6 +608,7 @@ int main(int argc, char **argv)
     posXTexture = loadTexture("posx.png");
     posYTexture = loadTexture("posy.png");
     posZTexture = loadTexture("posz.png");
+    sandTexture = loadTexture("sand.png");
    // glutReshapeFunc(reshape);
     glutMotionFunc(mouseMotion);
     glutSpecialFunc(SpecialInput);
