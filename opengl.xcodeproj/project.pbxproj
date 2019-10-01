@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8A6ED95C2340AA4A00D3FF0E /* sand.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A6ED95A2340A91D00D3FF0E /* sand.png */; };
+		8A73F41B2343264C00AAC04F /* road.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A73F4192343239400AAC04F /* road.png */; };
 		8A766AE5233C834F00E139B5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F55233709430063530A /* main.cpp */; };
 		8A766AF5233C98CA00E139B5 /* wood.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF4233C98A400E139B5 /* wood.png */; };
 		8A766AF6233C98CA00E139B5 /* negx.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AEE233C8E3400E139B5 /* negx.png */; };
@@ -51,6 +52,7 @@
 
 /* Begin PBXFileReference section */
 		8A6ED95A2340A91D00D3FF0E /* sand.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sand.png; sourceTree = "<group>"; };
+		8A73F4192343239400AAC04F /* road.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = road.png; sourceTree = "<group>"; };
 		8A766AED233C8DDD00E139B5 /* wood.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = wood.png; sourceTree = "<group>"; };
 		8A766AEE233C8E3400E139B5 /* negx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = negx.png; sourceTree = "<group>"; };
 		8A766AEF233C8E3400E139B5 /* posx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = posx.png; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				8A766AF0233C8E3400E139B5 /* posy.png */,
 				8A766AF1233C8E3400E139B5 /* posz.png */,
 				8A766AED233C8DDD00E139B5 /* wood.png */,
+				8A73F4192343239400AAC04F /* road.png */,
 				8AECA048233711090063530A /* grass.png */,
 				8AEC9F53233709430063530A /* rgbtest.png */,
 			);
@@ -389,6 +392,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A73F41B2343264C00AAC04F /* road.png in Sources */,
 				8A6ED95C2340AA4A00D3FF0E /* sand.png in Sources */,
 				8A766AF5233C98CA00E139B5 /* wood.png in Sources */,
 				8A766AF6233C98CA00E139B5 /* negx.png in Sources */,

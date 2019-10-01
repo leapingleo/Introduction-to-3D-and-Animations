@@ -27,11 +27,11 @@ static GLuint loadTexture(const char *filename)
     return tex;
 }
 
-void draw_cylinder(float radius, float width, float x, float y, float z, GLuint texture, bool wireFramed) {
+void draw_cylinder(float radius, float width, float x, float y, float z, GLuint texture, bool wireFramed, float nVertices) {
    // float x, y, z = 0, x1, y1, z1 = 1;
     //float width = 1;
     float theta = 0;
-    float nVertices = 10;
+   // float nVertices = 10;
     float segmentSize = 1 / nVertices;
     float thetaSize = 2 * M_PI * segmentSize;
     float count = 0;
@@ -199,5 +199,117 @@ void draw_skybox(GLuint negX, GLuint negY, GLuint negZ, GLuint posX, GLuint posY
     glVertex3f( length, -length, -length );
     glEnd();
     
+    glDisable(GL_TEXTURE_2D);
+}
+
+void draw_cube(float length, float r, float g, float b){
+    //xy plane z+
+    glColor3f(r, g, b);
+    glBegin(GL_POLYGON);
+    glVertex3f(-length, -length, length);
+    glVertex3f(length, -length, length);
+    glVertex3f(length, length, length);
+    glVertex3f(-length, length, length);
+    glEnd();
+    
+    //xy plane z-
+    glBegin(GL_POLYGON);
+    glVertex3f(-length, -length, -length);
+    glVertex3f(length, -length, -length);
+    glVertex3f(length, length, -length);
+    glVertex3f(-length, length, -length);
+    glEnd();
+    
+    //xz plane y+
+    glBegin(GL_POLYGON);
+    glVertex3f(-length, length, -length);
+    glVertex3f(length, length, -length);
+    glVertex3f(length, length, length);
+    glVertex3f(-length, length, length);
+    glEnd();
+    
+    //xz plane y-
+    glBegin(GL_POLYGON);
+    glVertex3f(-length, -length, -length);
+    glVertex3f(length, -length, -length);
+    glVertex3f(length, -length, length);
+    glVertex3f(-length, -length, length);
+    glEnd();
+    
+    //yz plane x+
+    glBegin(GL_POLYGON);
+    glVertex3f(length, -length, -length);
+    glVertex3f(length, -length, length);
+    glVertex3f(length, length, length);
+    glVertex3f(length, length, -length);
+    glEnd();
+    
+    //yz plane x-
+    glBegin(GL_POLYGON);
+    glVertex3f(-length, -length, -length);
+    glVertex3f(-length, -length, length);
+    glVertex3f(-length, length, length);
+    glVertex3f(-length, length, -length);
+    glEnd();
+}
+
+void draw_car(float x, float y, float z, float rotateDeg, GLuint texture){
+    glPushMatrix();
+    
+    glTranslatef(x, y, z);
+    glRotatef(rotateDeg, 0, 1, 0);
+        glPushMatrix();
+        glScalef(2, 0.6, 1);
+        draw_cube(0.1, 0.66, 0, 0.12);
+        glPopMatrix();
+    
+        glPushMatrix();
+        glTranslatef(0, 0.1, 0);
+        glScalef(1.4, 1, 1);
+        draw_cube(0.07, 0.1, 0.1, 0.1);
+        glPopMatrix();
+    
+        glPushMatrix();
+        glTranslatef(0.1, -0.06, 0.1);
+        draw_cylinder(0.05, 0.03, 0, 0, 0, texture, false, 20);
+        glPopMatrix();
+    
+        glPushMatrix();
+        glTranslatef(0.1, -0.06, -0.13);
+        draw_cylinder(0.05, 0.03, 0, 0, 0, texture, false, 20);
+        glPopMatrix();
+    
+        glPushMatrix();
+        glTranslatef(-0.1, -0.06, 0.1);
+        draw_cylinder(0.05, 0.03, 0, 0, 0, texture, false, 20);
+        glPopMatrix();
+    
+        glPushMatrix();
+        glTranslatef(-0.1, -0.06, -0.13);
+        draw_cylinder(0.05, 0.03, 0, 0, 0, texture, false, 20);
+        glPopMatrix();
+    glPopMatrix();
+}
+
+void draw_road(float x, float y, float z, float l, float w, GLuint texture, bool wireFramed){
+    glEnable(GL_DEPTH_TEST);
+    // glBlendFunc(GL_ONE, GL_ONE);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    if (wireFramed) {
+        glLineWidth(1.0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    
+    glColor3f(1, 1, 1);
+    glBegin(GL_POLYGON);
+    
+    glTexCoord2f(0, 0); glVertex3f(x + w * 0.5, y, z - l * 0.5);
+    glTexCoord2f(1, 0); glVertex3f(x + w * 0.5, y, z + l * 0.5);
+    glTexCoord2f(1, 1); glVertex3f(x - w * 0.5, y, z + l * 0.5);
+    glTexCoord2f(0, 1); glVertex3f(x - w * 0.5, y, z - l * 0.5);
+    glEnd();
     glDisable(GL_TEXTURE_2D);
 }

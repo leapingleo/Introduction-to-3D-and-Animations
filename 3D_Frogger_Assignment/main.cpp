@@ -13,10 +13,11 @@ typedef struct { float lastX, lastY, zoomFactor; bool zoomed; float scale;
 typedef struct { float x, y;} Vec2f;
 typedef struct { float x, y, z; } Vec3f;
 typedef struct { Vec3f r0, v0, v; Vec3f r; float rotationX, rotationY; bool isAlive; } Frog;
-typedef struct { float radius, width, posX, posY, posZ; } Log;
-typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ, riverHeight; } Scene;
+typedef struct { float radius, width, posX, posY, posZ, dz; } Log;
+typedef struct { float posX, posY, posZ; } Car;
+typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ, riverHeight, roadPosX, roadPosZ, roadLength, roadWidth; } Scene;
 
-Vec2f initVel = { 0.5, 70 };
+Vec2f initVel = { 0.4, 50 };
 Frog frog = {
     { 0.0, 0.0 },
    // { initVel.x * cosf(M_PI * initVel.y / 180) * cosf(deg2rad(frog.rotationY)),
@@ -25,11 +26,11 @@ Frog frog = {
     { 0.0, 0.0 },
     //frog x, y, z
     { 0.5, 0.0, 0.0 },
-    0, 0, true
+    0, 180, true
 };
 
-float dx = 0;
-float dy = -45;
+float dx = 110;
+float dy = -30;
 float rotateY = 0;
 float rotateX = 0;
 float movingX = 0, movingZ = -2;
@@ -38,18 +39,18 @@ float jumping = false;
 float a = 0;
 float r = 0.03;
 float t = 0;
-Sinewave water_sw = { 1.0/16.0, M_PI * 4, 2 * M_PI, 0.25 * M_PI };
-Sinewave sw1 = {0.25, M_PI, 2 * M_PI,  M_PI };
+Sinewave water_sw = { 1.0/60.0, M_PI * 4, 2 * M_PI, 0.25 * M_PI };
+Sinewave sw1 = {0.1, M_PI, 2 * M_PI,  M_PI };
 bool isWireframe = false;
 Log logs[5];
-
+Car cars[8];
 Camera camera { false, 0.3 };
-Scene scene { 0, 0, -1.5, 0, 3, 6, 0.15 };
+Scene scene { 0, 0, -1.5, 0, 3, 6, 0.15, 2, 0, 8, 2 };
 
 static GLuint grassTexture;
 static GLuint woodTexture, negXTexture, negYTexture,
               negZTexture, posXTexture, posYTexture, posZTexture,
-              sandTexture;
+              sandTexture, roadTexture;
 
 void drawAxes(float l) {
     glLineWidth(4.0);
@@ -76,14 +77,14 @@ void drawAxes(float l) {
 void mouseMotion(int x, int y) {
     //make sure it doesnt rotate wiredly by large amount when last mouse pos
     //are too far from current mouse pos
-    
-    if (x - camera.lastX < 5 && y - camera.lastY < 5) {
+    if (abs(x - camera.lastX) < 10 && abs(y - camera.lastY) < 10) {
+        std::cout << " last X " << camera.lastX <<", last Y " << camera.lastY << std::endl;
         dx += x - camera.lastX;
         dy += y - camera.lastY;
     }
     camera.lastX = x;
     camera.lastY = y;
-    std::cout << camera.lastX << std::endl;
+    std::cout << dy << std::endl;
 }
 
 void draw_rectangle(float x, float y, float z, float size){
@@ -265,7 +266,7 @@ void draw_water(float sizeX, float sizeZ, float x, float y, float z){
     float zStep = sizeZ / n;
    
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0, 1, 1, 0.8);
+    glColor4f(0, 1, 1, 0.6);
     if (isWireframe)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     else
@@ -298,6 +299,28 @@ bool collideWithLog(Log log, float x, float y, float z, bool withFrog) {
     return (x - log.posX) * (x - log.posX) + (y - log.posY) * (y - log.posY) <= r * r && z >= log.posZ && z <= log.posZ + log.width;
 }
 
+bool collideWithTerrain(float x, float y, float z) {
+    return x >= -4 && x <= 4 && z >= -4 && z <= 4 && y <= 0
+            && (x < scene.riverPosX - scene.riverSizeX * 0.5 ||
+                x > scene.riverPosX + scene.riverSizeX * 0.5 ||
+                z < scene.riverPosZ - scene.riverSizeZ * 0.5 ||
+                z > scene.riverPosZ + scene.riverSizeZ * 0.5);
+}
+
+bool inPondArea(float x, float z){
+    return x >= scene.riverPosX - scene.riverSizeX * 0.5 && x <= scene.riverPosX + scene.riverSizeX * 0.5 &&
+           z >= scene.riverPosZ - scene.riverSizeZ * 0.5 && z <= scene.riverPosZ + scene.riverSizeZ * 0.5;
+}
+
+bool collideWithCar(Car car, float x, float y, float z) {
+    float dx = car.posX - x;
+    float dy = car.posY - y;
+    float dz = car.posZ - z;
+    //magic number here, needs better definition
+    float radius_sum = 0.3 + r;
+    return dx * dx + dy * dy + dz * dz <= radius_sum * radius_sum;
+}
+
 void reset() {
     jumping = false;
     frog.v.x = 0;
@@ -306,7 +329,28 @@ void reset() {
   //  frog.r.y = 0;
 }
 
+void moveCars() {
+    for (int i = 0; i < 8; i++) {
+        if (i < 4) {
+            cars[i].posZ -= 0.05;
+            
+            if (cars[i].posZ < -3.7)
+                cars[i].posZ = 3.7;
+        } else {
+            cars[i].posZ += 0.05;
+            
+            if (cars[i].posZ > 3.7)
+                cars[i].posZ = -3.7;
+        }
+    }
+}
+
+
+float landingZ = 0;
+float landOnLog = false;
+
 void idle(void) {
+    moveCars();
     t += 0.1;
     
     if (!frog.isAlive) {
@@ -324,25 +368,32 @@ void idle(void) {
 //        frog.isAlive = false;
 //    }
     
-    if (frog.r.x >= -1 && frog.r.x <= 1 && frog.r.z >= -1 && frog.r.z <= 1 && frog.r.y <= 0) {
+    if (collideWithTerrain(frog.r.x, frog.r.y, frog.r.z)) {
         frog.r.y = 0;
         reset();
     }
-    if (frog.r.x >= scene.riverPosX - scene.riverSizeX * 0.5 &&
-        frog.r.x <= scene.riverPosX + scene.riverSizeX * 0.5 &&
-        frog.r.z >= scene.riverPosZ - scene.riverSizeZ * 0.5 &&
-        frog.r.z <= scene.riverPosZ + scene.riverSizeZ * 0.5
-        ) {
+    if (inPondArea(frog.r.x, frog.r.z)) {
+        //if frog collide with each log
         for (int i = 0; i < 5; i++) {
             if (collideWithLog(logs[i], frog.r.x, frog.r.y, frog.r.z, true)) {
+                if (!landOnLog) {
+                    landingZ = frog.r.z;
+                    landOnLog = true;
+                }
+                std::cout << " landed z " << landingZ << std::endl;
+               // frog.r.x = logs[i].posX;
                 frog.r.y = logs[i].posY + logs[i].radius;
+                frog.r.z = calcSineWave(sw1, frog.r.x, 0, t * 0.2) + landingZ;
                 reset();
-               // frog.r.x = logs[0].posX;
               //  reset();
             }
         }
     }
-    
+    for (int i = 0; i < 8; i++) {
+        if (collideWithCar(cars[i], frog.r.x, frog.r.y, frog.r.z)) {
+            frog.r.z = cars[i].posZ;
+        }
+    }
     glutPostRedisplay();
 }
 
@@ -376,7 +427,7 @@ void draw_trajectory(){
         
         
         //ground
-        if ( x >= -1 && x <= 1 && z >= -1 && z <= 1 && y <= 0){
+        if (collideWithTerrain(x, y, z)){
             break;
         }
         //river
@@ -437,9 +488,23 @@ void draw_Frog(){
 void draw_logs(){
     for (int i = 0; i < 5; i++) {
         logs[i].posY = calcSineWave(water_sw, logs[i].posX, 0, t) - scene.riverHeight;
-        draw_cylinder(logs[i].radius, logs[i].width, logs[i].posX, logs[i].posY, logs[i].posZ,woodTexture, isWireframe);
+        
+        float z = calcSineWave(sw1, logs[i].posX, 0, t * 0.2) + logs[i].posZ;
+    //    std::cout << "log 1 z: " << logs[0].posZ << std::endl;
+        draw_cylinder(logs[i].radius, logs[i].width, logs[i].posX, logs[i].posY, z ,woodTexture, isWireframe, 10);
+
     }
 }
+
+void draw_cars(){
+   // glScalef(1.1, 1.1, 1.1);
+    for (int i = 0; i < 8; i++) {
+    draw_car(cars[i].posX, 0.12, cars[i].posZ, -90, woodTexture);
+ //   draw_car(cars[1].posX, 0.12, cars[1].posZ, -90, woodTexture);
+    }
+}
+
+
 
 static void display(void)
 {
@@ -456,42 +521,15 @@ static void display(void)
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
     
-    
+    draw_road(scene.roadPosX, 0.01, scene.roadPosZ, scene.roadLength, scene.roadWidth, roadTexture, isWireframe);
     draw_plane(0, 0, 0, 8);
-//    draw_plane(1, 0, -3, 2);
-//    draw_plane(1, 0, -1, 2);
-//    draw_plane(1, 0, 1, 2);
-//    draw_plane(1, 0, 3,2 );
-//
-//    draw_plane(3, 0, -3,2);
-//    draw_plane(3, 0, -1,2);
-//    draw_plane(3, 0, 1,2);
-//    draw_plane(3, 0, 3,2);
-//
-//    //river left
-//   draw_plane(-0.5, 0, 3.5, 1);
-//   draw_plane(-1.5, 0, 3.5, 1);
-//   draw_plane(-2.5, 0, 3.5, 1);
-//
-//    //river right
-//    draw_plane(-0.5, 0, -3.5, 1);
-//    draw_plane(-1.5, 0, -3.5, 1);
-//    draw_plane(-2.5, 0, -3.5, 1);
-//
-//    draw_plane(-3.5, 0, -3.5, 1);
-//    draw_plane(-3.5, 0, -2.5, 1);
-//    draw_plane(-3.5, 0, -1.5, 1);
-//    draw_plane(-3.5, 0, -0.5, 1);
-//    draw_plane(-3.5, 0, 0.5, 1);
-//    draw_plane(-3.5, 0, 1.5, 1);
-//    draw_plane(-3.5, 0, 2.5, 1);
-//    draw_plane(-3.5, 0, 3.5, 1);
-    
-    
+    draw_cars();
     draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
     
     glPushMatrix();
-        drawAxes(0.8);
+     drawAxes(0.8);
+    glTranslatef(0, 0.031, 0);
+       
         draw_Frog();
     glPopMatrix();
     
@@ -549,6 +587,7 @@ void keyboard(unsigned char key, int x, int y) {
                 frog.v.z = frog.v0.z;
             }
             jumping = true;
+            landOnLog = false;
             break;
         default:
             break;
@@ -581,12 +620,24 @@ void init(){
     gluPerspective(75, 1, 0.01, 100);        // Multiply the current matrix with a generated perspective matrix
     glMatrixMode(GL_MODELVIEW);
     
-    //float radius, width, posX, posY, posZ
-    logs[0] = { 0.08, 0.8, -0.3, 0, -0.4 };
-    logs[1] = { 0.075, 0.9, -0.7, 0, 0 };
-    logs[2] = { 0.07, 1.1, -1.2, 0, -0.2 };
-    logs[3] = { 0.1, 1, -1.7, 0, -0.8 };
-    logs[4] = { 0.1, 0.9, -2.5, 0, -0.1 };
+    //float radius, width, posX, posY, posZ, dz
+    logs[0] = { 0.08, 0.8, -0.3, 0, -0.4, 0.1 };
+    logs[1] = { 0.075, 0.9, -0.7, 0, 0, 0.1 };
+    logs[2] = { 0.07, 1.1, -1.2, 0, -0.2, 0.1 };
+    logs[3] = { 0.1, 1, -1.7, 0, -0.8, 0.1 };
+    logs[4] = { 0.1, 0.9, -2.3, 0, -0.1, 0.1 };
+    
+    cars[0] = { 1.25, 0.01, 3.5};
+    cars[1] = { 1.25, 0.01, 2.2};
+    cars[2] = { 1.75, 0.01, 1.7};
+    cars[3] = { 1.75, 0.01, -0.6};
+    
+    cars[4] = { 2.25, 0.01, -3.4};
+    cars[5] = { 2.25, 0.01, -1.9};
+    cars[6] = { 2.75, 0.01, 0.5};
+    cars[7] = { 2.75, 0.01, 1.3};
+//    cars[3] = {}
+//    cars[4] = {}
     
   //  glutSwapBuffers();
 }
@@ -601,6 +652,7 @@ int main(int argc, char **argv)
     init();
     grassTexture = loadTexture("grass.png");
     woodTexture = loadTexture("wood.png");
+    roadTexture = loadTexture("road.png");
     
     negXTexture = loadTexture("negx.png");
     negYTexture = loadTexture("negy.png");
@@ -620,30 +672,6 @@ int main(int argc, char **argv)
     
     return EXIT_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
