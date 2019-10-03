@@ -6,6 +6,7 @@
 #include <OpenGL/glu.h>
 #include "helper.h"
 #include "drawHelper.h"
+#define NUM_OF_PARTICLES 100
 
 typedef struct { float lastX, lastY, zoomFactor; bool zoomed; float scale;
 } Camera;
@@ -16,6 +17,7 @@ typedef struct { Vec3f r0, v0, v; Vec3f r; float rotationX, rotationY; bool isAl
 typedef struct { float radius, width, posX, posY, posZ, dz; } Log;
 typedef struct { float posX, posY, posZ; } Car;
 typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ, riverHeight, roadPosX, roadPosZ, roadLength, roadWidth; } Scene;
+typedef struct { float posX, posY, posZ; Vec3f direction; } Particle;
 
 Vec2f initVel = { 0.4, 50 };
 Frog frog = {
@@ -29,6 +31,10 @@ Frog frog = {
     0, 180, true
 };
 
+
+float landingZ = 0;
+bool dead = false;
+bool landOnLog = false;
 float dx = 110;
 float dy = -30;
 float rotateY = 0;
@@ -46,6 +52,8 @@ Log logs[5];
 Car cars[8];
 Camera camera { false, 0.3 };
 Scene scene { 0, 0, -1.5, 0, 3, 6, 0.15, 2, 0, 8, 2 };
+Particle particles[100];
+
 
 static GLuint grassTexture;
 static GLuint woodTexture, negXTexture, negYTexture,
@@ -317,15 +325,23 @@ bool collideWithCar(Car car, float x, float y, float z) {
     float dy = car.posY - y;
     float dz = car.posZ - z;
     //magic number here, needs better definition
-    float radius_sum = 0.3 + r;
+    float radius_sum = 0.2 + r;
     return dx * dx + dy * dy + dz * dz <= radius_sum * radius_sum;
 }
 
 void reset() {
     jumping = false;
+    dead = false;
     frog.v.x = 0;
     frog.v.y = 0;
     frog.v.z = 0;
+    for (int i = 0; i < NUM_OF_PARTICLES; i++) {
+          float randX = (rand() % 200 - 100) * 0.003;
+          float randY = rand() % 100 * 0.009;
+          float randZ = (rand() % 200 - 100) * 0.003;
+          std::cout << randY << std::endl;
+          particles[i] = {0, -1000, 0, {randX, randY, randZ}};
+    }
   //  frog.r.y = 0;
 }
 
@@ -345,11 +361,39 @@ void moveCars() {
     }
 }
 
+void draw_particle() {
+    
+    glPointSize(20.0);
+    glColor3f(0, 1, 0);
+    for (int i = 0; i < NUM_OF_PARTICLES; i++) {
+        glBegin(GL_POINTS);
+        glVertex3f(frog.r.x + particles[i].posX, 1000 + particles[i].posY, frog.r.z + particles[i].posZ);
+       // glVertex3f(1, 1, 1);
+        glEnd();
+    }
+    glPointSize(1.0);
+}
 
-float landingZ = 0;
-float landOnLog = false;
+void update_particle_position(){
+    
+    for (int i = 0; i < NUM_OF_PARTICLES; i++) {
+//
+       
+//        particles[i].posX = frog.r.x;
+//        particles[i].posY =frog.r.y;
+//        particles[i].posZ =frog.r.z;
+        particles[i].posX += particles[i].direction.x * 0.05;
+        particles[i].posY += particles[i].direction.y * 0.05;
+        particles[i].posZ += particles[i].direction.z * 0.05;
+        
+        particles[i].direction.y += -0.5 * 0.08;
+        
+    }
+}
+
 
 void idle(void) {
+    
     moveCars();
     t += 0.1;
     
@@ -391,7 +435,10 @@ void idle(void) {
     }
     for (int i = 0; i < 8; i++) {
         if (collideWithCar(cars[i], frog.r.x, frog.r.y, frog.r.z)) {
-            frog.r.z = cars[i].posZ;
+            dead = true;
+            std::cout << "dfad" << std::endl;
+          //  draw_particle();
+            //frog.r.z = cars[i].posZ;
         }
     }
     glutPostRedisplay();
@@ -521,6 +568,10 @@ static void display(void)
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
     
+    if (dead) {
+        update_particle_position();
+        draw_particle();
+    }
     draw_road(scene.roadPosX, 0.01, scene.roadPosZ, scene.roadLength, scene.roadWidth, roadTexture, isWireframe);
     draw_plane(0, 0, 0, 8);
     draw_cars();
@@ -619,6 +670,16 @@ void init(){
     glLoadIdentity();            // Overwrite the contents with the identity
     gluPerspective(75, 1, 0.01, 100);        // Multiply the current matrix with a generated perspective matrix
     glMatrixMode(GL_MODELVIEW);
+    
+    //particles[0] = {0, 0, 0, {0.2, 2, 0.4} };
+    
+    for (int i = 0; i < NUM_OF_PARTICLES; i++) {
+        float randX = (rand() % 100 - 50) * 0.001;
+        float randY = rand() % 100 * 0.01;
+        float randZ = (rand() % 100 - 50) * 0.001;
+        std::cout << randY << std::endl;
+        particles[i] = {0, -1000, 0, {0.1, 0.1, 0.1}};
+    }
     
     //float radius, width, posX, posY, posZ, dz
     logs[0] = { 0.08, 0.8, -0.3, 0, -0.4, 0.1 };
