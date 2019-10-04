@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
-#include <GLUT/GLUT.h>
-#include <OpenGL/glu.h>
 #include "helper.h"
 #include "drawHelper.h"
 #define NUM_OF_PARTICLES 100
@@ -48,7 +46,7 @@ float t = 0, dt = 0;
 float global_time = 0, last_t = 0, timer = 0, deadTime = 0;
 Sinewave water_sw = { 1.0/60.0, M_PI * 4, 2 * M_PI, 0.25 * M_PI };
 Sinewave sw1 = {0.1, M_PI, 2 * M_PI,  M_PI };
-bool isWireframe = false;
+bool isWireframe = true;
 Log logs[5];
 Car cars[8];
 Camera camera { false, 0.3 };
@@ -348,7 +346,7 @@ void respawn(){
               float randZ = (rand() % 200 - 100) * 0.004;
               particles[i] = {0, 0, 0, {randX, randY, randZ}};
         }
-        dead = false;
+        frog.isAlive = true;
         frog.r.x = 3.2;
         frog.r.y = 0;
         frog.r.z = 0;
@@ -387,18 +385,20 @@ void draw_particle() {
 void update_particle_position(){
     
     for (int i = 0; i < NUM_OF_PARTICLES; i++) {
-//
-       
-//        particles[i].posX = frog.r.x;
-//        particles[i].posY =frog.r.y;
-//        particles[i].posZ =frog.r.z;
         particles[i].posX += particles[i].direction.x * 0.05;
         particles[i].posY += particles[i].direction.y * 0.05;
         particles[i].posZ += particles[i].direction.z * 0.05;
         
         particles[i].direction.y += -0.5 * 0.08;
-        
     }
+}
+
+void update_frog_position(){
+    frog.r.x += frog.v.x * 0.1;
+    frog.r.y += frog.v.y * 0.1;
+    frog.r.z += frog.v.z * 0.1;
+    // Velocity
+    frog.v.y += -0.25 * 0.1;
 }
 
 
@@ -407,25 +407,20 @@ void idle(void) {
     dt = global_time - last_t;
     timer += dt;
     last_t = global_time;
-    std::cout << (int)timer << std::endl;
-    if (dead) {
+    
+    if (!frog.isAlive) {
         respawn();
         update_particle_position();
-       
+    } else {
+        update_frog_position();
     }
     moveCars();
     t += 0.1;
     
-    if (!frog.isAlive) {
-        frog.r.y = calcSineWave(water_sw, frog.r.x, frog.r.z, dx);
-        return;
-    }
-    
-    frog.r.x += frog.v.x * 0.1;
-    frog.r.y += frog.v.y * 0.1;
-    frog.r.z += frog.v.z * 0.1;
-    // Velocity
-    frog.v.y += -0.25 * 0.1;
+//    if (!frog.isAlive) {
+//        frog.r.y = calcSineWave(water_sw, frog.r.x, frog.r.z, dx);
+//        return;
+//    }
     
 //    if (isUnderwater(water_sw, frog.r.x, frog.r.y, frog.r.z, dx)){
 //        frog.isAlive = false;
@@ -455,11 +450,11 @@ void idle(void) {
     for (int i = 0; i < 8; i++) {
         if (collideWithCar(cars[i], frog.r.x, frog.r.y, frog.r.z)) {
            
-            if (!dead) {
+            if (frog.isAlive) {
                 deadTime = global_time;
                 std::cout << "dead at " << deadTime << std::endl;
             }
-            dead = true;
+            frog.isAlive = false;
                
          //   std::cout << "dfad" << std::endl;
           //  draw_particle();
@@ -525,7 +520,10 @@ void draw_trajectory(){
     
 }
 
-bool horizontalRotate = false;
+float upper = 0;
+float mid = 0;
+float lower = 0;
+
 void draw_Frog(){
 //    if (horizontalRotate) {
 //        glTranslatef(movingX, 0, 0);
@@ -551,7 +549,10 @@ void draw_Frog(){
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
     
     glTranslatef(frog.r.x, frog.r.y, frog.r.z);
-    draw_sphere();
+   // glRotatef(-180, 0, 1, 0);
+    glScalef(0.5, 0.5, 0.5);
+    draw_frog(isWireframe, upper, mid, lower);
+   // draw_sphere();
    // draw_cube();
     drawAxes(0.3);
 }
@@ -570,12 +571,10 @@ void draw_logs(){
 void draw_cars(){
    // glScalef(1.1, 1.1, 1.1);
     for (int i = 0; i < 8; i++) {
-    draw_car(cars[i].posX, 0.12, cars[i].posZ, -90, woodTexture);
+    draw_car(cars[i].posX, 0.12, cars[i].posZ, -90, woodTexture, isWireframe);
  //   draw_car(cars[1].posX, 0.12, cars[1].posZ, -90, woodTexture);
     }
 }
-
-
 
 static void display(void)
 {
@@ -592,7 +591,7 @@ static void display(void)
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
     
-    if (dead) {
+    if (!frog.isAlive) {
         draw_particle();
     }
     draw_road(scene.roadPosX, 0.01, scene.roadPosZ, scene.roadLength, scene.roadWidth, roadTexture, isWireframe);
@@ -600,10 +599,12 @@ static void display(void)
     draw_cars();
     draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
     
-    if (!dead) {
+    if (frog.isAlive) {
         glPushMatrix();
+            
             drawAxes(0.8);
-            glTranslatef(0, 0.031, 0);
+        
+            glTranslatef(0, 0.05, 0);
             draw_Frog();
         glPopMatrix();
     }
@@ -643,7 +644,7 @@ void keyboard(unsigned char key, int x, int y) {
                 isWireframe = false;
             break;
         case ' ':
-            if (!jumping) {
+            if (frog.isAlive && !jumping) {
                 frog.v0.x = initVel.x * cosf(M_PI * initVel.y / 180) * cosf(M_PI * frog.rotationY / 180);
                 frog.v0.y = initVel.x * sinf(M_PI * initVel.y / 180);
                 frog.v0.z = initVel.x * cosf(M_PI * initVel.y / 180) * sinf(M_PI * frog.rotationY / 180);
@@ -654,6 +655,31 @@ void keyboard(unsigned char key, int x, int y) {
             jumping = true;
             landOnLog = false;
             break;
+        case 'u':
+            upper += 2;
+            std::cout << "upper " << upper << std::endl;
+            break;
+        case 'j':
+            upper -= 2;
+            std::cout << "upper " << upper << std::endl;
+            break;
+        case 'i':
+            mid += 2;
+            std::cout << "mid " << mid << std::endl;
+            break;
+        case 'k':
+            mid -= 2;
+            std::cout << "mid " << mid << std::endl;
+            break;
+        case 'o':
+            lower += 2;
+            std::cout << "lower " << lower << std::endl;
+            break;
+        case 'l':
+            lower -= 2;
+            std::cout << "lower " << lower << std::endl;
+            break;
+            
         default:
             break;
     }
@@ -671,10 +697,10 @@ void SpecialInput(int key, int x, int y)
             scale -= 0.1;
             break;
         case GLUT_KEY_LEFT:
-            movingX += 0.1;
+            movingX += 1;
             break;
         case GLUT_KEY_RIGHT:
-            movingX -= 0.1;
+            movingX -= 1;
             break;
     }
 }
@@ -684,8 +710,20 @@ void init(){
     glLoadIdentity();            // Overwrite the contents with the identity
     gluPerspective(75, 1, 0.01, 100);        // Multiply the current matrix with a generated perspective matrix
     glMatrixMode(GL_MODELVIEW);
+ 
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+     glEnable(GL_LIGHTING);
+     glEnable(GL_LIGHT0);
     
-    //particles[0] = {0, 0, 0, {0.2, 2, 0.4} };
+    GLfloat qaAmbientLight[] = {0.2, 0.2, 0.2, 1.0};
+    GLfloat qaDiffuseLight[] = {0.8, 0.8, 0.8, 1.0};
+    GLfloat qaSpecularLight[] = {1.0, 1.0, 1.0, 1.0};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
+    
+    GLfloat qaLightPosition[] = {0, 1  , 0, 1.0};
+    glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
     
     for (int i = 0; i < NUM_OF_PARTICLES; i++) {
         float randX = (rand() % 100 - 50) * 0.003;
@@ -710,7 +748,7 @@ void init(){
     cars[4] = { 2.25, 0.01, -3.4};
     cars[5] = { 2.25, 0.01, -1.9};
     cars[6] = { 2.75, 0.01, 0.5};
-  //  cars[7] = { 2.75, 0.01, 1.3};
+    cars[7] = { 2.75, 0.01, 1.3};
 //    cars[3] = {}
 //    cars[4] = {}
     
