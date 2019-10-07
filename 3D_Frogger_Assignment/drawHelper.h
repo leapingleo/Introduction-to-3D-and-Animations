@@ -218,8 +218,9 @@ void draw_cube(float length, float r, float g, float b, bool wireFramed){
     glMaterialf(GL_FRONT, GL_SHININESS, 60);
     //xy plane z+
    // glColor3f(r, g, b);
-    glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
     glNormal3f(0, 0, 1);
+    glColor3f(r, g, b);
     glVertex3f(-length, -length, length);
     glVertex3f(length, -length, length);
     glVertex3f(length, length, length);
@@ -227,8 +228,9 @@ void draw_cube(float length, float r, float g, float b, bool wireFramed){
     glEnd();
     
     //xy plane z-
-    glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
     glNormal3f(0, 0, -1);
+    glColor3f(r, g, b);
     glVertex3f(-length, -length, -length);
     glVertex3f(length, -length, -length);
     glVertex3f(length, length, -length);
@@ -236,8 +238,9 @@ void draw_cube(float length, float r, float g, float b, bool wireFramed){
     glEnd();
     
     //xz plane y+
-    glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
     glNormal3f(0, 1, 0);
+    glColor3f(r, g, b);
     glVertex3f(-length, length, -length);
     glVertex3f(length, length, -length);
     glVertex3f(length, length, length);
@@ -245,8 +248,9 @@ void draw_cube(float length, float r, float g, float b, bool wireFramed){
     glEnd();
     
     //xz plane y-
-    glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
     glNormal3f(0, -1, 0);
+    glColor3f(r, g, b);
     glVertex3f(-length, -length, -length);
     glVertex3f(length, -length, -length);
     glVertex3f(length, -length, length);
@@ -254,8 +258,9 @@ void draw_cube(float length, float r, float g, float b, bool wireFramed){
     glEnd();
     
     //yz plane x+
-    glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
     glNormal3f(1, 0, 0);
+    glColor3f(r, g, b);
     glVertex3f(length, -length, -length);
     glVertex3f(length, -length, length);
     glVertex3f(length, length, length);
@@ -263,8 +268,9 @@ void draw_cube(float length, float r, float g, float b, bool wireFramed){
     glEnd();
     
     //yz plane x-
-    glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
     glNormal3f(-1, 0, 0);
+    glColor3f(r, g, b);
     glVertex3f(-length, -length, -length);
     glVertex3f(-length, -length, length);
     glVertex3f(-length, length, length);
@@ -333,18 +339,19 @@ void draw_road(float x, float y, float z, float l, float w, GLuint texture, bool
     glDisable(GL_TEXTURE_2D);
 }
 
-void draw_frog(bool wireFramed, float upper, float mid, float lower) {
+void draw_frog(bool wireFramed, float upper, float mid, float lower, float frontUpperAng, float frontLowerAng, float torsor) {
     glPushMatrix();
-        //torsor
+        //torsor 10 deg
+        glRotatef(torsor, 0, 0, 1);
         glPushMatrix();
-    glRotatef(10, 0, 0, 1);
+       
         glScalef(1, 0.5, 0.65);
         draw_cube(0.1, 0, 1, 0, wireFramed);
         glPopMatrix();
         
         //head-part
         glPushMatrix();
-     glRotatef(10, 0, 0, 1);
+            //glRotatef(10, 0, 0, 1);
             //face
             glPushMatrix();
                 glTranslatef(0.1, 0.005, 0);
@@ -396,8 +403,8 @@ void draw_frog(bool wireFramed, float upper, float mid, float lower) {
             glTranslatef(-0.1, 0, 0.08);
             glRotatef(-30, 1, 0, 0);
             glRotatef(-30, 0, 1, 0);
-            //UPPER ROTATION
-            glRotatef(-30, 0, 0, 1);
+            //UPPER ROTATION -30
+            glRotatef(upper, 0, 0, 1);
             //upper leg
             glPushMatrix();
                // glRotatef(30, 0, 0, 1);
@@ -411,8 +418,8 @@ void draw_frog(bool wireFramed, float upper, float mid, float lower) {
                 //mid leg joint
                 
             glTranslatef(0.1, 0, 0);
-                //MID ROTATION
-                glRotatef(30, 0, 0, 1);
+                //MID ROTATION - 30
+                glRotatef(mid, 0, 0, 1);
     
                 glPushMatrix();
                     glTranslatef(-0.05, 0, 0);
@@ -424,8 +431,8 @@ void draw_frog(bool wireFramed, float upper, float mid, float lower) {
                 //lower leg
                 glPushMatrix();
                     glTranslatef(-0.1, 0, 0);
-                    //LOWER ROTATION
-                    glRotatef(-30, 0, 0, 1);
+                    //LOWER ROTATION -30
+                    glRotatef(lower, 0, 0, 1);
                     glScalef(0.5, 0.13, 0.2);
                     glTranslatef(0.1, 0, 0);
                     draw_cube(0.11, 0, 1, 0, wireFramed);
@@ -463,161 +470,96 @@ void draw_frog(bool wireFramed, float upper, float mid, float lower) {
         glPopMatrix();
     
         //left rear leg
-             glPushMatrix();
-                 //upper leg joint
-                 glTranslatef(-0.1, 0, -0.08);
-                 glRotatef(30, 1, 0, 0);
-                 glRotatef(30, 0, 1, 0);
-                //upper
-                 glRotatef(-30, 0, 0, 1);
-                 //upper leg
-                 glPushMatrix();
-                    // glRotatef(30, 0, 0, 1);
-                     //render upper leg
-                     glPushMatrix();
-                         glScalef(0.5, 0.13, 0.2);
-                         //glRotatef(45, 0, 1, 0);
-                         glTranslatef(0.1, 0, 0);
-                         draw_cube(0.1, 0, 1, 0, wireFramed);
-                     glPopMatrix();
-                     //mid leg joint
-                     
-                 glTranslatef(0.1, 0, 0);
-                     //mid rotation
-                     glRotatef(30, 0, 0, 1);
-         
-                     glPushMatrix();
-                         glTranslatef(-0.05, 0, 0);
-                         
-                         glScalef(0.4, 0.1, 0.2);
-                         draw_cube(0.11, 0, 1, 0, wireFramed);
-                     glPopMatrix();
-         
-                     //lower leg
-                     glPushMatrix();
-                         glTranslatef(-0.1, 0, 0);
-                         //lower rotation
-                         glRotatef(-30, 0, 0, 1);
-                         glScalef(0.5, 0.13, 0.2);
-                         glTranslatef(0.1, 0, 0);
-                         draw_cube(0.11, 0, 1, 0, wireFramed);
-         
-                         //foot
-                         glPushMatrix();
-                             glTranslatef(0.14, 0, 0);
-                             glScalef(0.35, 1.1, 1);
-                             draw_cube(0.13, 0, 1, 0, wireFramed);
-                             //mid toe
-                             glPushMatrix();
-                             glTranslatef(0.23, 0, 0);
-                             glScalef(0.8, 0.5, 0.2);
-                             draw_cube(0.13, 0, 1, 0, wireFramed);
-                             glPopMatrix();
-                             
-                             //left toe
-                             glPushMatrix();
-                             glTranslatef(0.23, 0, -0.1);
-                             glRotatef(20, 0, 1, 0);
-                             glScalef(0.8, 0.5, 0.2);
-                             draw_cube(0.13, 0, 1, 0, wireFramed);
-                             glPopMatrix();
-         
-                             //right toe
-                             glPushMatrix();
-                             glTranslatef(0.23, 0, 0.1);
-                             glRotatef(-20, 0, 1, 0);
-                             glScalef(0.8, 0.5, 0.2);
-                             draw_cube(0.13, 0, 1, 0, wireFramed);
-                             glPopMatrix();
-                         glPopMatrix();
-                     glPopMatrix();
-                 glPopMatrix();
-             glPopMatrix();
-    
-//        //left rear leg
-//        glPushMatrix();
-//                //upper leg joint
-//                glTranslatef(-0.05, 0, -0.1);
-//                glRotatef(30, 1, 0, 0);
-//                glRotatef(30, 0, 1, 0);
-//                glRotatef(-30, 0, 0, 1);
-//                //upper leg
-//                glPushMatrix();
-//                   // glRotatef(30, 0, 0, 1);
-//                    //render upper leg
-//                    glPushMatrix();
-//                        glScalef(0.5, 0.13, 0.2);
-//                        //glRotatef(45, 0, 1, 0);
-//                        draw_cube(0.1, 0, 1, 0, wireFramed);
-//                    glPopMatrix();
-//                    //mid leg joint
-//
-//                    glRotatef(10, 0, 0, 1);
-//                    glPushMatrix();
-//                        glTranslatef(0, -0.03, 0);
-//
-//                        glScalef(0.4, 0.1, 0.2);
-//                        draw_cube(0.11, 0, 1, 0, wireFramed);
-//                    glPopMatrix();
-//
-//                    //lower leg
-//                    glPushMatrix();
-//                        glTranslatef(0, -0.06, 0);
-//
-//                        glRotatef(-10, 0, 0, 1);
-//                        glScalef(0.5, 0.13, 0.2);
-//                        draw_cube(0.11, 0, 1, 0, wireFramed);
-//
-//                        //foot
-//                        glPushMatrix();
-//                            glTranslatef(0.14, 0, 0);
-//                            glScalef(0.35, 1.1, 1);
-//                            draw_cube(0.13, 0, 1, 0, wireFramed);
-//                            //mid toe
-//                            glPushMatrix();
-//                            glTranslatef(0.23, 0, 0);
-//                            glScalef(0.8, 0.5, 0.2);
-//                            draw_cube(0.13, 0, 1, 0, wireFramed);
-//                            glPopMatrix();
-//
-//                            //left toe
-//                            glPushMatrix();
-//                            glTranslatef(0.23, 0, -0.1);
-//                            glRotatef(20, 0, 1, 0);
-//                            glScalef(0.8, 0.5, 0.2);
-//                            draw_cube(0.13, 0, 1, 0, wireFramed);
-//                            glPopMatrix();
-//
-//                            //right toe
-//                            glPushMatrix();
-//                            glTranslatef(0.23, 0, 0.1);
-//                            glRotatef(-20, 0, 1, 0);
-//                            glScalef(0.8, 0.5, 0.2);
-//                            draw_cube(0.13, 0, 1, 0, wireFramed);
-//                            glPopMatrix();
-//                        glPopMatrix();
-//                    glPopMatrix();
-//                glPopMatrix();
-//            glPopMatrix();
-//
+        glPushMatrix();
+            //upper leg joint
+            glTranslatef(-0.1, 0, -0.08);
+            glRotatef(30, 1, 0, 0);
+            glRotatef(30, 0, 1, 0);
+            //upper
+            glRotatef(upper, 0, 0, 1);
+            
+            //upper leg
+            glPushMatrix();
+                //glRotatef(30, 0, 0, 1);
+                //render upper leg
+                glPushMatrix();
+                    glScalef(0.5, 0.13, 0.2);
+                    //glRotatef(45, 0, 1, 0);
+                    glTranslatef(0.1, 0, 0);
+                    draw_cube(0.1, 0, 1, 0, wireFramed);
+                glPopMatrix();
+            
+                //mid leg joint
+                glTranslatef(0.1, 0, 0);
+                //mid rotation - 30
+                glRotatef(mid, 0, 0, 1);
+
+                glPushMatrix();
+                    glTranslatef(-0.05, 0, 0);
+                    glScalef(0.4, 0.1, 0.2);
+                    draw_cube(0.11, 0, 1, 0, wireFramed);
+                glPopMatrix();
+
+                //lower leg
+                glPushMatrix();
+                    glTranslatef(-0.1, 0, 0);
+                    //lower rotation -30
+                    glRotatef(lower, 0, 0, 1);
+                    glScalef(0.5, 0.13, 0.2);
+                    glTranslatef(0.1, 0, 0);
+                    draw_cube(0.11, 0, 1, 0, wireFramed);
+
+                    //foot
+                    glPushMatrix();
+                        glTranslatef(0.14, 0, 0);
+                        glScalef(0.35, 1.1, 1);
+                        draw_cube(0.13, 0, 1, 0, wireFramed);
+                        //mid toe
+                        glPushMatrix();
+                        glTranslatef(0.23, 0, 0);
+                        glScalef(0.8, 0.5, 0.2);
+                        draw_cube(0.13, 0, 1, 0, wireFramed);
+                        glPopMatrix();
+
+                        //left toe
+                        glPushMatrix();
+                        glTranslatef(0.23, 0, -0.1);
+                        glRotatef(20, 0, 1, 0);
+                        glScalef(0.8, 0.5, 0.2);
+                        draw_cube(0.13, 0, 1, 0, wireFramed);
+                        glPopMatrix();
+
+                        //right toe
+                        glPushMatrix();
+                        glTranslatef(0.23, 0, 0.1);
+                        glRotatef(-20, 0, 1, 0);
+                        glScalef(0.8, 0.5, 0.2);
+                        draw_cube(0.13, 0, 1, 0, wireFramed);
+                        glPopMatrix();
+                    glPopMatrix();
+                glPopMatrix();
+            glPopMatrix();
+        glPopMatrix();
+
         //front right leg
         glPushMatrix();
             //joint rotation
             glTranslatef(0.1, -0.05, 0.06);
-            glRotatef(-30, 0, 1, 0);
-            //UPPER ROTATION
-            glRotatef(45, 0, 0, 1);
+            glRotatef(-15, 1, 0, 0);
+            //UPPER ROTATION 45
+            glRotatef(frontUpperAng, 0, 0, 1);
 
             glPushMatrix();
             //render upper leg
-            glPushMatrix();
-                glScalef(0.35, 0.15, 0.17);
+                glPushMatrix();
+                    glScalef(0.35, 0.15, .17);
                     glTranslatef(-0.05, 0, 0);
                     draw_cube(0.11, 0, 1, 0, wireFramed);
                 glPopMatrix();
-                //lower rotation
+                
+                //lower rotation -60
                 glTranslatef(-0.05, 0, 0);
-                glRotatef(-45, 0, 0, 1);
+                glRotatef(frontLowerAng, 0, 0, 1);
                    
                 glPushMatrix();
                     //render lower leg
@@ -661,9 +603,9 @@ void draw_frog(bool wireFramed, float upper, float mid, float lower) {
         glPushMatrix();
             //joint rotation
             glTranslatef(0.1, -0.05, -0.06);
-            glRotatef(30, 0, 1, 0);
-            //UPPER ROTATION
-            glRotatef(45, 0, 0, 1);
+            glRotatef(15, 1, 0, 0);
+            //UPPER ROTATION 45
+            glRotatef(frontUpperAng, 0, 0, 1);
 
             glPushMatrix();
             //render upper leg
@@ -672,9 +614,9 @@ void draw_frog(bool wireFramed, float upper, float mid, float lower) {
                     glTranslatef(-0.05, 0, 0);
                     draw_cube(0.11, 0, 1, 0, wireFramed);
                 glPopMatrix();
-                //lower rotation
+                //lower rotation -45
                 glTranslatef(-0.05, 0, 0);
-                glRotatef(-45, 0, 0, 1);
+                glRotatef(frontLowerAng, 0, 0, 1);
                    
                 glPushMatrix();
                     //render lower leg

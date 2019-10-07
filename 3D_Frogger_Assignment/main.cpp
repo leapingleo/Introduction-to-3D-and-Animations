@@ -17,7 +17,7 @@ typedef struct { float posX, posY, posZ; } Car;
 typedef struct { float groundX, groundZ, riverPosX, riverPosZ, riverSizeX, riverSizeZ, riverHeight, roadPosX, roadPosZ, roadLength, roadWidth; } Scene;
 typedef struct { float posX, posY, posZ; Vec3f direction; } Particle;
 
-Vec2f initVel = { 0.4, 50 };
+Vec2f initVel = { 0.7, 40 };
 Frog frog = {
     { 0.0, 0.0 },
    // { initVel.x * cosf(M_PI * initVel.y / 180) * cosf(deg2rad(frog.rotationY)),
@@ -30,8 +30,15 @@ Frog frog = {
 };
 
 
+//frog rotation
+float upper = upperRotation.min;
+float mid = midRotation.min;
+float lower = lowerRotation.min;
+float torsorAngle = torsorRotation.min;
+float frontUpperAngle = frontUpperRotation.min;
+float frontLowerAngle = frontLowerRotation.min;
+
 float landingZ = 0;
-bool dead = false;
 bool landOnLog = false;
 float dx = 110;
 float dy = -30;
@@ -42,11 +49,24 @@ float scale = 1;
 float jumping = false;
 float a = 0;
 float r = 0.03;
+
+//use for animations
+float startTime = 0;
+float endTime = 1;
+float currTime = 0;
+float startValue = 0;
+float endValue = -60;
+float duration = 4;
+
+float timeOfFlight = 0;
+
 float t = 0, dt = 0;
 float global_time = 0, last_t = 0, timer = 0, deadTime = 0;
+
 Sinewave water_sw = { 1.0/60.0, M_PI * 4, 2 * M_PI, 0.25 * M_PI };
 Sinewave sw1 = {0.1, M_PI, 2 * M_PI,  M_PI };
 bool isWireframe = true;
+
 Log logs[5];
 Car cars[8];
 Camera camera { false, 0.3 };
@@ -330,6 +350,8 @@ bool collideWithCar(Car car, float x, float y, float z) {
 
 void resetVelocity() {
     jumping = false;
+    currTime = 0;
+    timeOfFlight = 0;
   //  dead = false;
     frog.v.x = 0;
     frog.v.y = 0;
@@ -351,6 +373,14 @@ void respawn(){
         frog.r.y = 0;
         frog.r.z = 0;
     }
+    currTime = 0;
+    timeOfFlight = 0;
+    upper = upperRotation.min;
+    mid = midRotation.min;
+    lower = lowerRotation.min;
+    torsorAngle = torsorRotation.min;
+    frontUpperAngle = frontUpperRotation.min;
+    frontLowerAngle = frontLowerRotation.min;
 }
 
 void moveCars() {
@@ -394,19 +424,46 @@ void update_particle_position(){
 }
 
 void update_frog_position(){
-    frog.r.x += frog.v.x * 0.1;
-    frog.r.y += frog.v.y * 0.1;
-    frog.r.z += frog.v.z * 0.1;
+    frog.r.x += frog.v.x * dt;
+    frog.r.y += frog.v.y * dt;
+    frog.r.z += frog.v.z * dt;
     // Velocity
-    frog.v.y += -0.25 * 0.1;
+    frog.v.y += gravity * dt;
 }
 
+void frames(float t){
+    upperRotation = updateFrames(upperRotation, t, false);
+    midRotation = updateFrames(midRotation, t, false);
+    lowerRotation = updateFrames(lowerRotation, t, false);
+    torsorRotation = updateFrames(torsorRotation, t, false);
+    frontUpperRotation = updateFrames(frontUpperRotation, t, true);
+    frontLowerRotation = updateFrames(frontLowerRotation, t, false);
+}
 
 void idle(void) {
     global_time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
     dt = global_time - last_t;
     timer += dt;
     last_t = global_time;
+    
+    frames(timeOfFlight);
+    
+  if (currTime < timeOfFlight) {
+        upper = interpolator(upperRotation, currTime);
+        mid = interpolator(midRotation, currTime);
+        lower = interpolator(lowerRotation, currTime);
+        torsorAngle = interpolator(torsorRotation, currTime);
+        frontUpperAngle = interpolator(frontUpperRotation, currTime);
+        frontLowerAngle = interpolator(frontLowerRotation, currTime);
+        currTime += dt;
+      if (currTime > timeOfFlight){
+          return;
+         // currTime = 0;
+      }
+  }
+   // std::cout << "body angle " << torsorAngle << std::endl;
+    
+    
     
     if (!frog.isAlive) {
         respawn();
@@ -417,14 +474,6 @@ void idle(void) {
     moveCars();
     t += 0.1;
     
-//    if (!frog.isAlive) {
-//        frog.r.y = calcSineWave(water_sw, frog.r.x, frog.r.z, dx);
-//        return;
-//    }
-    
-//    if (isUnderwater(water_sw, frog.r.x, frog.r.y, frog.r.z, dx)){
-//        frog.isAlive = false;
-//    }
     
     if (collideWithTerrain(frog.r.x, frog.r.y, frog.r.z)) {
         frog.r.y = 0;
@@ -449,17 +498,10 @@ void idle(void) {
     }
     for (int i = 0; i < 8; i++) {
         if (collideWithCar(cars[i], frog.r.x, frog.r.y, frog.r.z)) {
-           
             if (frog.isAlive) {
                 deadTime = global_time;
-                std::cout << "dead at " << deadTime << std::endl;
             }
             frog.isAlive = false;
-               
-         //   std::cout << "dfad" << std::endl;
-          //  draw_particle();
-             //   draw_particle();
-            //frog.r.z = cars[i].posZ;
         }
     }
     glutPostRedisplay();
@@ -489,7 +531,7 @@ void draw_trajectory(){
         x += v.x * dt;
         y += v.y * dt;
         z += v.z * dt;
-        v.y += -0.25 * dt;
+        v.y += gravity * dt;
         
         
         //ground
@@ -508,10 +550,7 @@ void draw_trajectory(){
         if (collideWithLog(logs[0], x, y, z, false)) {
             break;
         }
-     //   if (x >= scene.riverPosX)
-
-        //  if (isCollideWithLogs(x, y))
-        //   break;
+        
         glVertex3f(x, y, z);
         count++;
     }
@@ -520,9 +559,7 @@ void draw_trajectory(){
     
 }
 
-float upper = 0;
-float mid = 0;
-float lower = 0;
+
 
 void draw_Frog(){
 //    if (horizontalRotate) {
@@ -550,8 +587,8 @@ void draw_Frog(){
     
     glTranslatef(frog.r.x, frog.r.y, frog.r.z);
    // glRotatef(-180, 0, 1, 0);
-    glScalef(0.5, 0.5, 0.5);
-    draw_frog(isWireframe, upper, mid, lower);
+    glScalef(0.3, 0.3, 0.3);
+    draw_frog(isWireframe, upper, mid, lower, frontUpperAngle, frontLowerAngle, torsorAngle);
    // draw_sphere();
    // draw_cube();
     drawAxes(0.3);
@@ -590,7 +627,10 @@ static void display(void)
     glScalef(scale, scale, scale);
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
-    
+    GLfloat qaLightPosition[] = {-6, 6, 6, 1.0};
+    glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
+    GLfloat qaLightPosition1[] = {-6, 6, -6, 1.0};
+    glLightfv(GL_LIGHT1, GL_POSITION, qaLightPosition1);
     if (!frog.isAlive) {
         draw_particle();
     }
@@ -644,6 +684,8 @@ void keyboard(unsigned char key, int x, int y) {
                 isWireframe = false;
             break;
         case ' ':
+            timeOfFlight = getTimeOfFlight(initVel.x * sinf(deg2rad(initVel.y)));
+            std::cout << "flight time " << timeOfFlight << std::endl;
             if (frog.isAlive && !jumping) {
                 frog.v0.x = initVel.x * cosf(M_PI * initVel.y / 180) * cosf(M_PI * frog.rotationY / 180);
                 frog.v0.y = initVel.x * sinf(M_PI * initVel.y / 180);
@@ -714,17 +756,22 @@ void init(){
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
      glEnable(GL_LIGHTING);
      glEnable(GL_LIGHT0);
+   // glEnable(GL_LIGHT1);
     
-    GLfloat qaAmbientLight[] = {0.2, 0.2, 0.2, 1.0};
+    GLfloat qaAmbientLight[] = {0.5, 0.5, 0.5, 1.0};
     GLfloat qaDiffuseLight[] = {0.8, 0.8, 0.8, 1.0};
     GLfloat qaSpecularLight[] = {1.0, 1.0, 1.0, 1.0};
     glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
     glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
     
-    GLfloat qaLightPosition[] = {0, 1  , 0, 1.0};
-    glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
+    glLightfv(GL_LIGHT1, GL_AMBIENT, qaAmbientLight);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, qaDiffuseLight);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, qaSpecularLight);
     
+  
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
     for (int i = 0; i < NUM_OF_PARTICLES; i++) {
         float randX = (rand() % 100 - 50) * 0.003;
         float randY = rand() % 100 * 0.01;
@@ -749,6 +796,8 @@ void init(){
     cars[5] = { 2.25, 0.01, -1.9};
     cars[6] = { 2.75, 0.01, 0.5};
     cars[7] = { 2.75, 0.01, 1.3};
+    
+ //   frames();
 //    cars[3] = {}
 //    cars[4] = {}
     
