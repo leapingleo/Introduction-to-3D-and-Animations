@@ -292,7 +292,6 @@ Interpolator updateFrames(Interpolator inter, float t, bool specialFrames) {
                 inter.keyframes[i].value = inter.max;
             }
         }
-     //   std::cout << "time " << inter.keyframes[i].time << " with value: " << inter.keyframes[i].value << std::endl;
     }
     return inter;
 }

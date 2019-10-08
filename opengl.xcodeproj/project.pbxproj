@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		8A6ED95C2340AA4A00D3FF0E /* sand.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A6ED95A2340A91D00D3FF0E /* sand.png */; };
 		8A73F41B2343264C00AAC04F /* road.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A73F4192343239400AAC04F /* road.png */; };
-		8A766AE5233C834F00E139B5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F55233709430063530A /* main.cpp */; };
 		8A766AF5233C98CA00E139B5 /* wood.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF4233C98A400E139B5 /* wood.png */; };
 		8A766AF6233C98CA00E139B5 /* negx.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AEE233C8E3400E139B5 /* negx.png */; };
 		8A766AF7233C98CA00E139B5 /* negy.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF2233C8E3400E139B5 /* negy.png */; };
@@ -18,6 +17,7 @@
 		8A766AFA233C98CA00E139B5 /* posy.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF0233C8E3400E139B5 /* posy.png */; };
 		8A766AFB233C98CA00E139B5 /* posz.png in Sources */ = {isa = PBXBuildFile; fileRef = 8A766AF1233C8E3400E139B5 /* posz.png */; };
 		8A7CE2C02338700800F8BB9C /* helper.h in Sources */ = {isa = PBXBuildFile; fileRef = 8A7CE2BF2338700800F8BB9C /* helper.h */; };
+		8ABCC003234B149F009AD3A7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F55233709430063530A /* main.cpp */; };
 		8AEC9F8D2337094E0063530A /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AEC9F8C2337094E0063530A /* OpenGL.framework */; };
 		8AEC9F8F233709570063530A /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8AEC9F8E233709570063530A /* GLUT.framework */; };
 		8AEC9FD023370A250063530A /* rgbtest.png in Sources */ = {isa = PBXBuildFile; fileRef = 8AEC9F53233709430063530A /* rgbtest.png */; };
@@ -392,6 +392,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8ABCC003234B149F009AD3A7 /* main.cpp in Sources */,
 				8A73F41B2343264C00AAC04F /* road.png in Sources */,
 				8A6ED95C2340AA4A00D3FF0E /* sand.png in Sources */,
 				8A766AF5233C98CA00E139B5 /* wood.png in Sources */,
@@ -401,7 +402,6 @@
 				8A766AF9233C98CA00E139B5 /* posx.png in Sources */,
 				8A766AFA233C98CA00E139B5 /* posy.png in Sources */,
 				8A766AFB233C98CA00E139B5 /* posz.png in Sources */,
-				8A766AE5233C834F00E139B5 /* main.cpp in Sources */,
 				8AECA0492337110F0063530A /* grass.png in Sources */,
 				8AEC9FD023370A250063530A /* rgbtest.png in Sources */,
 				8A7CE2C02338700800F8BB9C /* helper.h in Sources */,

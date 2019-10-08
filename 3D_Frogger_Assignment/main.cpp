@@ -4,7 +4,7 @@
 #include <iostream>
 #include "helper.h"
 #include "drawHelper.h"
-#define NUM_OF_PARTICLES 100
+#define NUM_OF_PARTICLES 500
 
 typedef struct { float lastX, lastY, zoomFactor; bool zoomed; float scale;
 } Camera;
@@ -44,7 +44,7 @@ float dx = 110;
 float dy = -30;
 float rotateY = 0;
 float rotateX = 0;
-float movingX = 0, movingZ = -2;
+float movingY = 0, movingZ = -2, movingX = 0;
 float scale = 1;
 float jumping = false;
 float a = 0;
@@ -71,7 +71,7 @@ Log logs[5];
 Car cars[8];
 Camera camera { false, 0.3 };
 Scene scene { 0, 0, -1.5, 0, 3, 6, 0.15, 2, 0, 8, 2 };
-Particle particles[100];
+Particle particles[NUM_OF_PARTICLES];
 
 
 static GLuint grassTexture;
@@ -361,17 +361,18 @@ void resetVelocity() {
 }
 
 void respawn(){
-    if (timer > deadTime + 2) {
+    if (timer > deadTime + 5) {
         for (int i = 0; i < NUM_OF_PARTICLES; i++) {
               float randX = (rand() % 200 - 100) * 0.004;
               float randY = rand() % 100 * 0.009;
               float randZ = (rand() % 200 - 100) * 0.004;
-              particles[i] = {0, 0, 0, {randX, randY, randZ}};
+              particles[i] = {0, 0.05, 0, {randX, randY, randZ}};
         }
         frog.isAlive = true;
         frog.r.x = 3.2;
         frog.r.y = 0;
         frog.r.z = 0;
+        movingX = -dy;
     }
     currTime = 0;
     timeOfFlight = 0;
@@ -381,6 +382,7 @@ void respawn(){
     torsorAngle = torsorRotation.min;
     frontUpperAngle = frontUpperRotation.min;
     frontLowerAngle = frontLowerRotation.min;
+    
 }
 
 void moveCars() {
@@ -402,10 +404,16 @@ void moveCars() {
 void draw_particle() {
     
     glPointSize(20.0);
-    glColor3f(0, 1, 0);
+    
+   
     for (int i = 0; i < NUM_OF_PARTICLES; i++) {
+        float x = rand() % 100;
+           if (x > 20)
+               glColor3f(1, 0, 0);
+           else
+               glColor3f(0, 1, 0);
         glBegin(GL_POINTS);
-        glVertex3f(frog.r.x + particles[i].posX, frog.r.y + particles[i].posY, frog.r.z + particles[i].posZ);
+        glVertex3f(frog.r.x + particles[i].posX, particles[i].posY, frog.r.z + particles[i].posZ);
        // glVertex3f(1, 1, 1);
         glEnd();
     }
@@ -415,20 +423,23 @@ void draw_particle() {
 void update_particle_position(){
     
     for (int i = 0; i < NUM_OF_PARTICLES; i++) {
-        particles[i].posX += particles[i].direction.x * 0.05;
-        particles[i].posY += particles[i].direction.y * 0.05;
-        particles[i].posZ += particles[i].direction.z * 0.05;
-        
-        particles[i].direction.y += -0.5 * 0.08;
+       
+        if (particles[i].posY >= 0.05) {
+            particles[i].posX += particles[i].direction.x * 0.05;
+            particles[i].posY += particles[i].direction.y * 0.05;
+            particles[i].posZ += particles[i].direction.z * 0.05;
+            
+            particles[i].direction.y += -0.5 * 0.05;
+        }
     }
 }
 
 void update_frog_position(){
-    frog.r.x += frog.v.x * dt;
-    frog.r.y += frog.v.y * dt;
-    frog.r.z += frog.v.z * dt;
+    frog.r.x += frog.v.x * dt * 1.5;
+    frog.r.y += frog.v.y * dt * 1.5;
+    frog.r.z += frog.v.z * dt * 1.5;
     // Velocity
-    frog.v.y += gravity * dt;
+    frog.v.y += gravity * dt * 1.5;
 }
 
 void frames(float t){
@@ -441,6 +452,13 @@ void frames(float t){
 }
 
 void idle(void) {
+    if (!frog.isAlive) {
+        movingY += 1;
+        if (movingX <= 60) {
+            std::cout << "moving x: " << movingX << std::endl;
+            movingX += 0.618;
+        }
+    }
     global_time = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
     dt = global_time - last_t;
     timer += dt;
@@ -448,7 +466,7 @@ void idle(void) {
     
     frames(timeOfFlight);
     
-  if (currTime < timeOfFlight) {
+    if (currTime < timeOfFlight) {
         upper = interpolator(upperRotation, currTime);
         mid = interpolator(midRotation, currTime);
         lower = interpolator(lowerRotation, currTime);
@@ -456,14 +474,13 @@ void idle(void) {
         frontUpperAngle = interpolator(frontUpperRotation, currTime);
         frontLowerAngle = interpolator(frontLowerRotation, currTime);
         currTime += dt;
-      if (currTime > timeOfFlight){
-          return;
+        if (currTime > timeOfFlight){
+            return;
          // currTime = 0;
-      }
-  }
+        }
+    }
    // std::cout << "body angle " << torsorAngle << std::endl;
-    
-    
+
     
     if (!frog.isAlive) {
         respawn();
@@ -488,7 +505,7 @@ void idle(void) {
                     landOnLog = true;
                 }
                 
-               // frog.r.x = logs[i].posX;
+                frog.r.x = logs[i].posX;
                 frog.r.y = logs[i].posY + logs[i].radius;
                 frog.r.z = calcSineWave(sw1, frog.r.x, 0, t * 0.2) + landingZ;
                 resetVelocity();
@@ -608,7 +625,7 @@ void draw_logs(){
 void draw_cars(){
    // glScalef(1.1, 1.1, 1.1);
     for (int i = 0; i < 8; i++) {
-    draw_car(cars[i].posX, 0.12, cars[i].posZ, -90, woodTexture, isWireframe);
+        draw_car(cars[i].posX, 0.12, cars[i].posZ, -90, woodTexture, isWireframe);
  //   draw_car(cars[1].posX, 0.12, cars[1].posZ, -90, woodTexture);
     }
 }
@@ -622,29 +639,36 @@ static void display(void)
     //make the scene visiable by moving -1 unit in z-axis
     glTranslatef(0, 0, -1);
     //make the pivot at orgin when rotating the camera
-    glRotatef(-dy, 1, 0, 0);
-    glRotatef(-dx, 0, 1, 0);
-    glScalef(scale, scale, scale);
+    if (!frog.isAlive){
+        glRotatef(movingX, 1, 0, 0);
+        glRotatef(-movingY, 0, 1, 0);
+        glScalef(0.7, 0.7, 0.7);
+    } else {
+        glRotatef(-dy, 1, 0, 0);
+        glRotatef(-dx, 0, 1, 0);
+        glScalef(scale, scale, scale);
+    }
+    
     //shift the whole scene by negative units as the frog moves
     glTranslatef(-frog.r.x, -frog.r.y, -frog.r.z);
     GLfloat qaLightPosition[] = {-6, 6, 6, 1.0};
     glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
     GLfloat qaLightPosition1[] = {-6, 6, -6, 1.0};
     glLightfv(GL_LIGHT1, GL_POSITION, qaLightPosition1);
+   
     if (!frog.isAlive) {
         draw_particle();
     }
-    draw_road(scene.roadPosX, 0.01, scene.roadPosZ, scene.roadLength, scene.roadWidth, roadTexture, isWireframe);
+    
+    draw_road(scene.roadPosX, 0.005, scene.roadPosZ, scene.roadLength, scene.roadWidth, roadTexture, isWireframe);
     draw_plane(0, 0, 0, 8);
     draw_cars();
     draw_water(scene.riverSizeX, scene.riverSizeZ, scene.riverPosX, -scene.riverHeight, scene.riverPosZ);
     
     if (frog.isAlive) {
         glPushMatrix();
-            
             drawAxes(0.8);
-        
-            glTranslatef(0, 0.05, 0);
+            glTranslatef(0, 0.03, 0);
             draw_Frog();
         glPopMatrix();
     }
@@ -684,7 +708,7 @@ void keyboard(unsigned char key, int x, int y) {
                 isWireframe = false;
             break;
         case ' ':
-            timeOfFlight = getTimeOfFlight(initVel.x * sinf(deg2rad(initVel.y)));
+            timeOfFlight = getTimeOfFlight(initVel.x * sinf(deg2rad(initVel.y))) * 0.66;
             std::cout << "flight time " << timeOfFlight << std::endl;
             if (frog.isAlive && !jumping) {
                 frog.v0.x = initVel.x * cosf(M_PI * initVel.y / 180) * cosf(M_PI * frog.rotationY / 180);
@@ -777,7 +801,7 @@ void init(){
         float randY = rand() % 100 * 0.01;
         float randZ = (rand() % 100 - 50) * 0.003;
         std::cout << randY << std::endl;
-        particles[i] = {0, 0, 0, {randX, randY, randZ}};
+        particles[i] = {0, 0.05, 0, {randX, randY, randZ}};
     }
     
     //float radius, width, posX, posY, posZ, dz
@@ -809,7 +833,7 @@ int main(int argc, char **argv)
     glutInit(&argc, argv);
     glutInitDisplayMode((GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH));
     glutInitWindowSize(600, 600);
-    glutCreateWindow("Frogger");
+    glutCreateWindow("OpenGL - Frogger");
     
     init();
     grassTexture = loadTexture("grass.png");

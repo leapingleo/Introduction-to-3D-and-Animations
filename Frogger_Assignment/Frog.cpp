@@ -18,7 +18,7 @@ Vec2f initVel = { 0.25, 70 };
 Frog frog = {
     { 0.0, 0.0 },
     { initVel.x * cosf(M_PI * initVel.y / 180), initVel.x * sinf(M_PI * initVel.y / 180) },
-    { 0.0, 0.0 },
+    { -0.9, 0.0 },
     { 0.0, 0.0 }
 };
 
